@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block header_title %}Create Quiz for {{ course.title }}{% endblock %}
+{% block header_subtitle %}Configure quiz policies, attempts, and scoring.{% endblock %}
+
+{% block content %}
+<style>
+    .settings-section {
+        background: var(--surface, #f8f9fc);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .settings-section h3 { margin-top: 0; margin-bottom: 1.25rem; font-size: 1.15rem; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+    
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text); }
+    .help-text { font-size: 0.8rem; color: var(--text-light); margin-top: 0.35rem; display: block; }
+    
+    .checkbox-row {
+        display: flex; align-items: center; gap: 0.75rem;
+        background: white; padding: 0.85rem; border: 1px solid var(--border); border-radius: 0.5rem;
+    }
+    .checkbox-row label { margin: 0; font-weight: 500; cursor: pointer; }
+    .checkbox-row input[type="checkbox"] { width: 1.2rem; height: 1.2rem; cursor: pointer; }
+</style>
+
+<div style="max-width: 900px; margin: 0 auto;">
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- Form Errors -->
+        {% if form.non_field_errors %}
+        <div style="background: #fee2e2; border-left: 4px solid var(--danger); padding: 1rem; margin-bottom: 1.5rem; border-radius: 0.5rem; color: #991b1b;">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="settings-section">
+            <h3>📝 General Details</h3>
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+                {{ form.title }}
+                {% if form.title.errors %}<span style="color: var(--danger); font-size: 0.8rem;">{{ form.title.errors.0 }}</span>{% endif %}
+                <span class="help-text">{{ form.title.help_text }}</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.number_of_questions.id_for_label }}">{{ form.number_of_questions.label }}</label>
+                {{ form.number_of_questions }}
+                {% if form.number_of_questions.errors %}<span style="color: var(--danger); font-size: 0.8rem;">{{ form.number_of_questions.errors.0 }}</span>{% endif %}
+                <span class="help-text">{{ form.number_of_questions.help_text }}</span>
+            </div>
+            <div class="checkbox-row" style="margin-top: 1rem; width: max-content;">
+                {{ form.is_published }}
+                <label for="{{ form.is_published.id_for_label }}">Publish this quiz immediately</label>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>⏱️ Timing & Availability</h3>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="{{ form.duration.id_for_label }}">{{ form.duration.label }} (Minutes)</label>
+                    {{ form.duration }}
+                    <span class="help-text">0 means unlimited time.</span>
+                </div>
+                <div></div> <!-- spacer -->
+                <div class="form-group">
+                    <label for="{{ form.start_date.id_for_label }}">{{ form.start_date.label }}</label>
+                    {{ form.start_date }}
+                    <span class="help-text">Optional. When the quiz becomes available.</span>
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.end_date.id_for_label }}">{{ form.end_date.label }}</label>
+                    {{ form.end_date }}
+                    <span class="help-text">Optional. When the quiz closes.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>🎯 Attempt Policy</h3>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="{{ form.max_attempts.id_for_label }}">{{ form.max_attempts.label }}</label>
+                    {{ form.max_attempts }}
+                    <span class="help-text">0 means unlimited attempts.</span>
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.attempt_policy.id_for_label }}">{{ form.attempt_policy.label }}</label>
+                    {{ form.attempt_policy }}
+                    <span class="help-text">Which score counts if multiple attempts?</span>
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.pass_percentage.id_for_label }}">{{ form.pass_percentage.label }} (%)</label>
+                    {{ form.pass_percentage }}
+                    <span class="help-text">Percentage required to pass.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>⚙️ Display Options</h3>
+            <div class="grid-2">
+                <div class="checkbox-row">
+                    {{ form.shuffle_questions }}
+                    <label for="{{ form.shuffle_questions.id_for_label }}">{{ form.shuffle_questions.label }}</label>
+                </div>
+                <div class="checkbox-row">
+                    {{ form.show_correct_answers }}
+                    <label for="{{ form.show_correct_answers.id_for_label }}">Show Correct Answers after submission</label>
+                </div>
+                <div class="checkbox-row">
+                    {{ form.show_score }}
+                    <label for="{{ form.show_score.id_for_label }}">{{ form.show_score.label }}</label>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.75rem 2rem;">💾 Save Quiz Configuration</button>
+            <a href="{% url 'course_detail_instructor' course.id %}" class="btn btn-outline" style="font-size: 1.1rem; padding: 0.75rem 2rem;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

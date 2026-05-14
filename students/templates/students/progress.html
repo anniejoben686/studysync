@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block title %}My Progress - STUDYSYNC{% endblock %}
+{% block header_title %}My Progress{% endblock %}
+{% block header_subtitle %}Track your quiz performance and learning journey{% endblock %}
+
+{% block content %}
+<style>
+    /* Summary stat cards */
+    .stat-cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 1.75rem;
+    }
+    @media (max-width: 900px) { .stat-cards { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .stat-cards { grid-template-columns: 1fr; } }
+
+    .stat-card {
+        border-radius: 0.9rem;
+        padding: 1.4rem 1.25rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        right: -1rem; top: -1rem;
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+    }
+    .stat-card .sc-num   { font-size: 2rem; font-weight: 800; line-height: 1; }
+    .stat-card .sc-label { font-size: 0.8rem; opacity: 0.85; margin-top: 0.35rem; font-weight: 500; }
+    .stat-card .sc-icon  { font-size: 1.75rem; margin-bottom: 0.5rem; }
+    .sc-purple  { background: linear-gradient(135deg, #6c63ff, #8b5cf6); }
+    .sc-green   { background: linear-gradient(135deg, #10b981, #059669); }
+    .sc-amber   { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .sc-blue    { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+
+    /* Table */
+    .attempts-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .attempts-table th {
+        padding: 0.85rem 1rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-light);
+        border-bottom: 2px solid var(--border);
+        background: var(--surface, #f8f9fc);
+    }
+    .attempts-table td {
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+    }
+    .attempts-table tr:last-child td { border-bottom: none; }
+    .attempts-table tr:hover td { background: var(--surface, #f8f9fc); }
+
+    /* Progress bar */
+    .pbar-wrap { width: 100%; background: #e9ecef; border-radius: 999px; height: 7px; min-width: 80px; }
+    .pbar-fill  { height: 7px; border-radius: 999px; transition: width 0.6s ease; }
+    .pbar-green  { background: #10b981; }
+    .pbar-blue   { background: #3b82f6; }
+    .pbar-amber  { background: #f59e0b; }
+    .pbar-red    { background: #ef4444; }
+
+    /* Badges */
+    .perf-pill {
+        display: inline-block;
+        padding: 0.2rem 0.65rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+    .pill-outstanding { background: #d1fae5; color: #065f46; }
+    .pill-good        { background: #dbeafe; color: #1e40af; }
+    .pill-average     { background: #fef3c7; color: #92400e; }
+    .pill-danger      { background: #fee2e2; color: #991b1b; }
+    .pill-best        { background: #ede9fe; color: #4c1d95; font-size: 0.68rem; }
+
+    .empty-state {
+        text-align: center; padding: 3rem; color: var(--text-light);
+    }
+    .empty-state h3 { margin-bottom: 0.5rem; }
+</style>
+
+<!-- Summary Cards -->
+<div class="stat-cards">
+    <div class="stat-card sc-purple">
+        <div class="sc-icon">📝</div>
+        <div class="sc-num">{{ total_attempted }}</div>
+        <div class="sc-label">Total Quizzes Attempted</div>
+    </div>
+    <div class="stat-card sc-green">
+        <div class="sc-icon">📊</div>
+        <div class="sc-num">{{ avg_pct }}%</div>
+        <div class="sc-label">Average Percentage</div>
+    </div>
+    <div class="stat-card sc-amber">
+        <div class="sc-icon">🏆</div>
+        <div class="sc-num">
+            {% if best_attempt %}{{ best_attempt.percentage|floatformat:1 }}%{% else %}—{% endif %}
+        </div>
+        <div class="sc-label">Best Score</div>
+    </div>
+    <div class="stat-card sc-blue">
+        <div class="sc-icon">🕐</div>
+        <div class="sc-num">
+            {% if latest_attempt %}{{ latest_attempt.percentage|floatformat:1 }}%{% else %}—{% endif %}
+        </div>
+        <div class="sc-label">Latest Score</div>
+    </div>
+</div>
+
+<!-- Attempts Table -->
+<div class="card" style="padding:0; overflow:hidden;">
+    <div style="padding:1.5rem 1.5rem 0.75rem; display:flex; justify-content:space-between; align-items:center;">
+        <h2 style="margin:0; font-size:1.15rem;">Attempt History</h2>
+        <a href="{% url 'student_quizzes' %}" class="btn btn-primary" style="font-size:0.82rem;padding:0.45rem 1rem;">+ Take a Quiz</a>
+    </div>
+
+    <div style="overflow-x:auto; padding: 0 0 1rem;">
+        <table class="attempts-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Quiz</th>
+                    <th>Course</th>
+                    <th style="text-align:center;">Attempt</th>
+                    <th>Marks</th>
+                    <th>Percentage</th>
+                    <th style="text-align:center;">Date</th>
+                    <th style="text-align:center;">Performance</th>
+                    <th style="text-align:center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in annotated %}
+                {% with a=item.attempt %}
+                <tr>
+                    <td style="color:var(--text-light);font-size:0.8rem;">{{ forloop.counter }}</td>
+                    <td>
+                        <strong>{{ a.quiz.title }}</strong>
+                        {% if a.is_best %}<span class="perf-pill pill-best" style="margin-left:0.4rem;">⭐ Best</span>{% endif %}
+                    </td>
+                    <td style="color:var(--text-light);">{{ a.quiz.course.title }}</td>
+                    <td style="text-align:center;">
+                        <span style="font-size:0.82rem;background:var(--surface,#f8f9fc);padding:0.2rem 0.5rem;border-radius:0.4rem;font-weight:600;">#{{ a.attempt_number }}</span>
+                    </td>
+                    <td>
+                        <span style="font-weight:600;">{{ a.marks_obtained }}/{{ a.total_marks }}</span>
+                    </td>
+                    <td style="min-width:130px;">
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            <div class="pbar-wrap">
+                                <div class="pbar-fill
+                                    {% if a.percentage >= 85 %}pbar-green
+                                    {% elif a.percentage >= 60 %}pbar-blue
+                                    {% elif a.percentage >= 40 %}pbar-amber
+                                    {% else %}pbar-red{% endif %}"
+                                    style="width:{{ a.percentage }}%;"></div>
+                            </div>
+                            <span style="font-size:0.82rem;font-weight:700;min-width:36px;">{{ a.percentage|floatformat:1 }}%</span>
+                        </div>
+                    </td>
+                    <td style="text-align:center;color:var(--text-light);font-size:0.82rem;white-space:nowrap;">
+                        {{ a.submitted_at|date:"M d, Y" }}
+                    </td>
+                    <td style="text-align:center;">
+                        <span class="perf-pill
+                            {% if item.css == 'success' %}pill-outstanding
+                            {% elif item.css == 'good' %}pill-good
+                            {% elif item.css == 'average' %}pill-average
+                            {% else %}pill-danger{% endif %}">
+                            {{ item.label }}
+                        </span>
+                    </td>
+                    <td style="text-align:center;">
+                        <a href="{% url 'take_quiz' a.quiz.pk %}"
+                           style="font-size:0.78rem;color:var(--primary);text-decoration:none;font-weight:600;white-space:nowrap;">
+                           Retry →
+                        </a>
+                    </td>
+                </tr>
+                {% endwith %}
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="empty-state">
+                        <h3>No Attempts Yet</h3>
+                        <p>Take your first quiz to see your progress here.</p>
+                        <a href="{% url 'student_quizzes' %}" class="btn btn-primary" style="margin-top:0.75rem;">Browse Quizzes</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

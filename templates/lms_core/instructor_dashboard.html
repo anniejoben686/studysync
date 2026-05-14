@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block header_title %}Instructor Dashboard{% endblock %}
+{% block header_subtitle %}Manage your courses and view student progress.{% endblock %}
+
+{% block content %}
+<div class="grid" style="margin-bottom: 2rem;">
+    <!-- Summary Cards -->
+    <div class="card" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white;">
+        <h3 style="color: white; font-size: 1.5rem;">{{ courses.count }}</h3>
+        <p style="color: rgba(255,255,255,0.8); margin: 0;">Active Courses</p>
+    </div>
+    
+    <div class="card" style="background: linear-gradient(135deg, var(--secondary) 0%, #059669 100%); color: white;">
+        <h3 style="color: white; font-size: 1.5rem;">
+            {{ total_lessons }}
+        </h3>
+        <p style="color: rgba(255,255,255,0.8); margin: 0;">Total Lessons</p>
+    </div>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h2 style="color: var(--text); margin: 0;">Your Taught Courses</h2>
+    <a href="{% url 'course_create' %}" class="btn btn-primary">+ Create Course</a>
+</div>
+
+{% if courses %}
+    <div class="grid">
+        {% for course in courses %}
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                    <h3 style="margin: 0; font-size: 1.25rem; color: var(--text);">{{ course.title }}</h3>
+                    <span class="badge">Class {{ course.target_class }}</span>
+                </div>
+                
+                <p style="color: var(--primary); font-weight: 500; margin-bottom: 1rem;">{{ course.subject.name }}</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
+                        <span style="color: var(--text-light);">Lessons</span>
+                        <span style="font-weight: 600;">{{ course.lessons.count }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
+                        <span style="color: var(--text-light);">Quizzes</span>
+                        <span style="font-weight: 600;">{{ course.quizzes.count }}</span>
+                    </div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <a href="{% url 'lesson_create' course.id %}" class="btn btn-outline" style="padding: 0.5rem; font-size: 0.875rem;">+ Add Lesson</a>
+                    <a href="{% url 'quiz_create' course.id %}" class="btn btn-outline" style="padding: 0.5rem; font-size: 0.875rem;">+ Add Quiz</a>
+                    <a href="{% url 'course_detail_instructor' course.id %}" class="btn btn-primary" style="padding: 0.5rem; font-size: 0.875rem; background: var(--text); color: white;">Manage Course</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <p>You haven't created any courses yet.</p>
+        <a href="{% url 'course_create' %}" class="btn btn-primary" style="margin-top: 1rem;">Create Your First Course</a>
+    </div>
+{% endif %}
+{% endblock %}

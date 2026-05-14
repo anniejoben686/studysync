@@ -1,0 +1,457 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration - STUDYSYNC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        /* ── Registration-specific overrides ────────────────────── */
+        .reg-box {
+            background: var(--card-bg, #fff);
+            border-radius: 1.25rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.13);
+            padding: 2.5rem 2.75rem;
+            width: 100%;
+            max-width: 780px;
+            margin: auto;
+        }
+
+        .reg-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .reg-header h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text, #1a1a2e);
+            margin-bottom: 0.4rem;
+        }
+        .reg-header p {
+            font-size: 0.9rem;
+            color: var(--text-light, #6b7280);
+        }
+
+        /* 2-column grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem 1.5rem;
+        }
+        .form-grid .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Field groups */
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+        .field-group label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text, #1a1a2e);
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+        .field-group label .req {
+            color: #e74c3c;
+            margin-left: 2px;
+        }
+
+        /* Input wrapper */
+        .input-wrap {
+            position: relative;
+        }
+        .input-wrap input,
+        .input-wrap select {
+            width: 100%;
+            padding: 0.7rem 0.9rem;
+            border: 1.5px solid var(--border, #e0e4ef);
+            border-radius: 0.6rem;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg, #f8f9fc);
+            color: var(--text, #1a1a2e);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        .input-wrap select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.85rem center;
+            padding-right: 2.2rem;
+        }
+        .input-wrap input:focus,
+        .input-wrap select:focus {
+            border-color: var(--primary, #6c63ff);
+            box-shadow: 0 0 0 3px rgba(108,99,255,0.12);
+            background: #fff;
+        }
+        .input-wrap input.is-invalid,
+        .input-wrap select.is-invalid {
+            border-color: #e74c3c;
+            box-shadow: 0 0 0 3px rgba(231,76,60,0.10);
+        }
+        .input-wrap input.is-valid,
+        .input-wrap select.is-valid {
+            border-color: #27ae60;
+            box-shadow: 0 0 0 3px rgba(39,174,96,0.10);
+        }
+
+        /* Password toggle */
+        .input-wrap .toggle-pw {
+            position: absolute;
+            right: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            opacity: 0.55;
+            transition: opacity 0.2s;
+            padding: 0;
+        }
+        .input-wrap .toggle-pw:hover { opacity: 1; }
+
+        /* Error & success messages */
+        .field-error {
+            font-size: 0.78rem;
+            color: #e74c3c;
+            margin-top: 0.15rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .field-error::before { content: "⚠ "; }
+
+        /* Submit button */
+        .reg-submit {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, var(--primary, #6c63ff), #8b5cf6);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 0.7rem;
+            cursor: pointer;
+            letter-spacing: 0.04em;
+            transition: opacity 0.2s, transform 0.15s;
+            margin-top: 0.5rem;
+        }
+        .reg-submit:hover { opacity: 0.92; transform: translateY(-1px); }
+        .reg-submit:active { transform: translateY(0); }
+
+        .reg-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.88rem;
+            color: var(--text-light, #6b7280);
+        }
+        .reg-footer a {
+            color: var(--primary, #6c63ff);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .reg-footer a:hover { text-decoration: underline; }
+
+        .divider {
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--text-light, #6b7280);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Server-side non-field errors */
+        .server-errors {
+            background: #fff0f0;
+            border: 1.5px solid #e74c3c;
+            border-radius: 0.6rem;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.88rem;
+            color: #c0392b;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .reg-box { padding: 2rem 1.25rem; }
+        }
+    </style>
+</head>
+<body class="auth-container">
+    <div class="reg-box">
+        <div class="reg-header">
+            <h2>🎓 Create Your Account</h2>
+            <p>Join STUDYSYNC — fill in the details below to get started</p>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="server-errors">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="divider">Personal Information</div>
+
+        <form method="post" id="regForm" novalidate>
+            {% csrf_token %}
+            <div class="form-grid">
+
+                <!-- Full Name -->
+                <div class="field-group">
+                    <label for="id_full_name">Full Name <span class="req">*</span></label>
+                    <div class="input-wrap">
+                        <input type="text" id="id_full_name" name="full_name"
+                               value="{{ form.full_name.value|default:'' }}"
+                               placeholder="Enter your full name"
+                               maxlength="100" autocomplete="off">
+                    </div>
+                    <span class="field-error" id="err_full_name" style="display:none;"></span>
+                    {% for error in form.full_name.errors %}
+                        <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Gender -->
+                <div class="field-group">
+                    <label for="id_gender">Gender <span class="req">*</span></label>
+                    <div class="input-wrap">
+                        <select id="id_gender" name="gender">
+                            <option value="" {% if not form.gender.value %}selected{% endif %}>-- Select Gender --</option>
+                            <option value="Male"   {% if form.gender.value == 'Male' %}selected{% endif %}>Male</option>
+                            <option value="Female" {% if form.gender.value == 'Female' %}selected{% endif %}>Female</option>
+                        </select>
+                    </div>
+                    <span class="field-error" id="err_gender" style="display:none;"></span>
+                    {% for error in form.gender.errors %}
+                        <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Email -->
+                <div class="field-group">
+                    <label for="id_email">Email Address <span class="req">*</span></label>
+                    <div class="input-wrap">
+                        <input type="email" id="id_email" name="email"
+                               value="{{ form.email.value|default:'' }}"
+                               placeholder="Enter your email address"
+                               autocomplete="off">
+                    </div>
+                    <span class="field-error" id="err_email" style="display:none;"></span>
+                    {% for error in form.email.errors %}
+                        <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Phone Number -->
+                <div class="field-group">
+                    <label for="id_phone_number">Phone Number <span class="req">*</span></label>
+                    <div class="input-wrap">
+                        <input type="tel" id="id_phone_number" name="phone_number"
+                               value="{{ form.phone_number.value|default:'' }}"
+                               placeholder="10-digit mobile number"
+                               maxlength="10" inputmode="numeric" autocomplete="off">
+                    </div>
+                    <span class="field-error" id="err_phone_number" style="display:none;"></span>
+                    {% for error in form.phone_number.errors %}
+                        <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Class Selection -->
+                <div class="field-group">
+                    <label for="id_current_class">Class <span class="req">*</span></label>
+                    <div class="input-wrap">
+                        <select id="id_current_class" name="current_class">
+                            <option value="" {% if not form.current_class.value %}selected{% endif %}>-- Select Class --</option>
+                            <option value="8"  {% if form.current_class.value|stringformat:"s" == '8'  %}selected{% endif %}>Class 8</option>
+                            <option value="9"  {% if form.current_class.value|stringformat:"s" == '9'  %}selected{% endif %}>Class 9</option>
+                            <option value="10" {% if form.current_class.value|stringformat:"s" == '10' %}selected{% endif %}>Class 10</option>
+                        </select>
+                    </div>
+                    <span class="field-error" id="err_current_class" style="display:none;"></span>
+                    {% for error in form.current_class.errors %}
+                        <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Username -->
+                <div class="field-group">
+                    <label for="id_username">Username <span class="req">*</span></label>
+                    <div class="input-wrap">
+                        <input type="text" id="id_username" name="username"
+                               value="{{ form.username.value|default:'' }}"
+                               placeholder="Choose a username"
+                               maxlength="30" autocomplete="off">
+                    </div>
+                    <span class="field-error" id="err_username" style="display:none;"></span>
+                    {% for error in form.username.errors %}
+                        <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Password -->
+                <div class="field-group">
+                    <label for="id_password1">Password <span class="req">*</span></label>
+                    <div class="input-wrap">
+                        <input type="password" id="id_password1" name="password1"
+                               placeholder="Create a strong password"
+                               maxlength="128" autocomplete="new-password">
+                        <button type="button" class="toggle-pw" onclick="togglePw('id_password1', this)" title="Show/hide password">👁</button>
+                    </div>
+                    <span class="field-error" id="err_password1" style="display:none;"></span>
+                    {% for error in form.password1.errors %}
+                        <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="field-group">
+                    <label for="id_password2">Confirm Password <span class="req">*</span></label>
+                    <div class="input-wrap">
+                        <input type="password" id="id_password2" name="password2"
+                               placeholder="Confirm your password"
+                               maxlength="128" autocomplete="new-password">
+                        <button type="button" class="toggle-pw" onclick="togglePw('id_password2', this)" title="Show/hide password">👁</button>
+                    </div>
+                    <span class="field-error" id="err_password2" style="display:none;"></span>
+                    {% for error in form.password2.errors %}
+                        <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Submit -->
+                <div class="full-width" style="margin-top: 0.5rem;">
+                    <button type="submit" class="reg-submit">Create Account →</button>
+                </div>
+
+            </div>
+        </form>
+
+        <div class="reg-footer">
+            Already have an account? <a href="{% url 'login' %}">Login here</a>
+        </div>
+    </div>
+
+    <script>
+    /* ── Client-side validation ──────────────────────────────────── */
+    const FIELD_IDS = [
+        'full_name', 'gender', 'email',
+        'phone_number', 'current_class',
+        'username', 'password1', 'password2'
+    ];
+
+    function showErr(id, msg) {
+        const el = document.getElementById('err_' + id);
+        const input = document.getElementById('id_' + id);
+        if (el) { el.textContent = msg; el.style.display = msg ? 'flex' : 'none'; }
+        if (input) {
+            input.classList.toggle('is-invalid', !!msg);
+            input.classList.toggle('is-valid', !msg && input.value.trim() !== '');
+        }
+    }
+
+    function validateField(id) {
+        const input = document.getElementById('id_' + id);
+        if (!input) return true;
+        const val = input.value;
+        const trimmed = val.trim();
+
+        if (id === 'full_name') {
+            if (!trimmed) { showErr(id, 'Full name is required.'); return false; }
+            if (trimmed.length < 3) { showErr(id, 'Enter a valid full name (minimum 3 characters).'); return false; }
+            if (!/^[A-Za-z ]+$/.test(trimmed)) { showErr(id, 'Enter a valid full name using letters only.'); return false; }
+        }
+        if (id === 'gender') {
+            if (!trimmed) { showErr(id, 'Please select a gender.'); return false; }
+        }
+        if (id === 'email') {
+            if (!trimmed) { showErr(id, 'Email address is required.'); return false; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) { showErr(id, 'Enter a valid email address.'); return false; }
+        }
+        if (id === 'phone_number') {
+            if (!trimmed) { showErr(id, 'Phone number is required.'); return false; }
+            if (!/^\d{10}$/.test(trimmed)) { showErr(id, 'Enter a valid 10-digit phone number.'); return false; }
+            if (!/^[6-9]/.test(trimmed)) { showErr(id, 'Enter a valid 10-digit phone number.'); return false; }
+        }
+        if (id === 'current_class') {
+            if (!trimmed) { showErr(id, 'Please select your class.'); return false; }
+        }
+        if (id === 'username') {
+            if (!trimmed) { showErr(id, 'Username is required.'); return false; }
+            if (trimmed.length < 4) { showErr(id, 'Username must be at least 4 characters long.'); return false; }
+            if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(trimmed)) {
+                showErr(id, 'Username can only contain letters, numbers, and underscores.');
+                return false;
+            }
+        }
+        if (id === 'password1') {
+            if (!val) { showErr(id, 'Password is required.'); return false; }
+            if (val.length < 8) { showErr(id, 'Password must be at least 8 characters long.'); return false; }
+            if (!/[A-Z]/.test(val) || !/[a-z]/.test(val) || !/\d/.test(val) || !/[!@#$%^&*(),.?":{}|<>_\-\+=/\\;\[\]'`~]/.test(val)) {
+                showErr(id, 'Password must contain uppercase, lowercase, number, and special character.');
+                return false;
+            }
+        }
+        if (id === 'password2') {
+            const p1 = document.getElementById('id_password1').value;
+            if (!val) { showErr(id, 'Please confirm your password.'); return false; }
+            if (val !== p1) { showErr(id, 'Passwords do not match.'); return false; }
+        }
+
+        showErr(id, '');
+        return true;
+    }
+
+    // Live blur validation
+    FIELD_IDS.forEach(function(id) {
+        const input = document.getElementById('id_' + id);
+        if (input) {
+            input.addEventListener('blur', function() { validateField(id); });
+            input.addEventListener('input', function() {
+                if (this.classList.contains('is-invalid')) validateField(id);
+            });
+        }
+    });
+
+    // Block phone from receiving non-digits
+    document.getElementById('id_phone_number').addEventListener('keypress', function(e) {
+        if (!/\d/.test(e.key)) e.preventDefault();
+    });
+
+    // Form submit: run all validations
+    document.getElementById('regForm').addEventListener('submit', function(e) {
+        let valid = true;
+        FIELD_IDS.forEach(function(id) {
+            if (!validateField(id)) valid = false;
+        });
+        if (!valid) e.preventDefault();
+    });
+
+    // Show/hide password toggle
+    function togglePw(inputId, btn) {
+        const inp = document.getElementById(inputId);
+        if (inp.type === 'password') {
+            inp.type = 'text';
+            btn.textContent = '🙈';
+        } else {
+            inp.type = 'password';
+            btn.textContent = '👁';
+        }
+    }
+    </script>
+</body>
+</html>

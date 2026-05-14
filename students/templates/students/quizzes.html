@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block header_title %}Available Quizzes{% endblock %}
+{% block header_subtitle %}Test your knowledge on completed modules{% endblock %}
+
+{% block content %}
+<style>
+    .attempt-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25rem 0.65rem;
+        border-radius: 999px;
+        background: #ede9fe;
+        color: #4c1d95;
+    }
+    .best-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.2rem 0.6rem;
+        border-radius: 999px;
+        background: #d1fae5;
+        color: #065f46;
+    }
+</style>
+
+<div class="grid">
+    {% for item in quiz_data %}
+    {% with quiz=item.quiz %}
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+            <h3 style="margin: 0; font-size: 1.1rem;">{{ quiz.title }}</h3>
+            <span class="badge" style="background: var(--secondary-light, #d1fae5); color: #065f46;">
+                {{ quiz.questions.count }} Qs
+            </span>
+        </div>
+
+        <p style="font-size: 0.875rem; color: var(--text-light); margin-bottom: 0.75rem;">
+            {{ quiz.course.title }}
+        </p>
+
+        {% if item.attempt_count > 0 %}
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.9rem;">
+            <span class="attempt-badge">
+                📝 {{ item.attempt_count }} Attempt{{ item.attempt_count|pluralize }}
+            </span>
+            {% if item.best_pct is not None %}
+            <span class="best-badge">
+                🏆 Best: {{ item.best_pct }}%
+            </span>
+            {% endif %}
+        </div>
+        {% else %}
+        <p style="font-size:0.8rem; color:var(--text-light); margin-bottom:0.9rem;">
+            Not attempted yet
+        </p>
+        {% endif %}
+
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{% url 'take_quiz' quiz.id %}" class="btn btn-primary" style="flex: 1; text-align: center; padding: 0.5rem;">
+                {% if item.attempt_count > 0 %}Retry Quiz{% else %}Take Quiz{% endif %}
+            </a>
+        </div>
+    </div>
+    {% endwith %}
+    {% empty %}
+    <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+        <h3>No Quizzes Available</h3>
+        <p>There are no quizzes available for your courses yet.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

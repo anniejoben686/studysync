@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block header_title %}{{ course.title }}{% endblock %}
+{% block header_subtitle %}Manage lessons and quizzes for this course.{% endblock %}
+
+{% block content %}
+<div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+    <a href="{% url 'instructor_dashboard' %}" class="btn btn-outline">← Back to Dashboard</a>
+    <a href="{% url 'lesson_create' course.id %}" class="btn btn-primary">+ Add Video/PDF Lesson</a>
+    <a href="{% url 'quiz_create' course.id %}" class="btn btn-primary"
+        style="background: var(--secondary); border: none;">+ Add MCQ Quiz</a>
+</div>
+
+<div class="grid" style="grid-template-columns: 1fr 1fr;">
+    <!-- Lessons List -->
+    <div class="card">
+        <h3
+            style="margin-bottom: 1.5rem; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">
+            Lessons</h3>
+        {% if lessons %}
+        <ul style="list-style: none; padding: 0;">
+            {% for lesson in lessons %}
+            <li
+                style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; margin-bottom: 1rem; background: var(--background);">
+                <h4 style="margin: 0 0 0.5rem 0;">{{ lesson.title }}</h4>
+                <div style="display: flex; gap: 1rem; font-size: 0.875rem; color: var(--text-light);">
+                    {% if lesson.video_url %}<span>🎥 Video</span>{% endif %}
+                    {% if lesson.document %}<span>📄 PDF Document</span>{% endif %}
+                    <span>👁️ {{ lesson.views }} Views</span>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p style="color: var(--text-light);">No lessons added yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Quizzes List -->
+    <div class="card">
+        <h3
+            style="margin-bottom: 1.5rem; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">
+            Quizzes</h3>
+        {% if quizzes %}
+        <ul style="list-style: none; padding: 0;">
+            {% for quiz in quizzes %}
+            <li
+                style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; margin-bottom: 1rem; background: var(--background); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="margin: 0 0 0.5rem 0;">{{ quiz.title }}</h4>
+                    <span style="font-size: 0.875rem; color: var(--text-light);">{{ quiz.questions.count }}
+                        Questions</span>
+                </div>
+                <a href="{% url 'quiz_detail_instructor' quiz.id %}" class="btn btn-outline"
+                    style="padding: 0.5rem 1rem;">Manage</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p style="color: var(--text-light);">No quizzes added yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block header_title %}Analytics: {{ quiz.title }}{% endblock %}
+{% block header_subtitle %}Course: {{ quiz.course.title }} | Class {{ quiz.course.target_class }}{% endblock %}
+
+{% block content %}
+<style>
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+    .stat-card {
+        background: white; border: 1px solid var(--border); border-radius: 0.75rem;
+        padding: 1.25rem; text-align: center;
+    }
+    .stat-val { font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 0.25rem; line-height: 1; }
+    .stat-label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; }
+    
+    .status-pass { color: #10b981; }
+    .status-fail { color: #ef4444; }
+    
+    .list-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+    @media (max-width: 768px) { .list-grid { grid-template-columns: 1fr; } }
+    
+    .perf-list { background: white; border: 1px solid var(--border); border-radius: 0.75rem; overflow: hidden; }
+    .perf-header { padding: 1rem 1.25rem; background: var(--surface, #f8f9fc); border-bottom: 1px solid var(--border); font-weight: 700; font-size: 1.05rem; }
+    .perf-item { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .perf-item:last-child { border-bottom: none; }
+    .p-name { font-weight: 600; color: var(--text); }
+    .p-user { font-size: 0.75rem; color: var(--text-light); }
+    .p-score { font-weight: 700; font-size: 1.1rem; }
+</style>
+
+<div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+    <a href="{% url 'quiz_detail_instructor' quiz.id %}" class="btn btn-outline">← Back to Quiz</a>
+    <a href="{% url 'student_performance' %}?quiz_id={{ quiz.id }}" class="btn btn-primary" style="background:var(--secondary);">View All Attempts</a>
+</div>
+
+{% if not has_data %}
+<div class="card" style="text-align: center; padding: 4rem 2rem;">
+    <h3 style="color: var(--text-light); margin-bottom: 1rem;">No Data Available Yet</h3>
+    <p>Analytics will be generated here once students start attempting this quiz.</p>
+</div>
+{% else %}
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-val">{{ total_students }}</div>
+        <div class="stat-label">Students Attempted</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-val">{{ avg_score }}%</div>
+        <div class="stat-label">Class Average</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-val">{{ max_score }}%</div>
+        <div class="stat-label">Highest Score</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-val" style="display:flex; justify-content:center; gap:0.5rem;">
+            <span class="status-pass">{{ passed_count }}</span>
+            <span style="color:var(--border);">/</span>
+            <span class="status-fail">{{ failed_count }}</span>
+        </div>
+        <div class="stat-label">Passed / Failed</div>
+    </div>
+</div>
+
+<div class="list-grid">
+    <!-- Top Performers -->
+    <div class="perf-list">
+        <div class="perf-header" style="color: var(--primary);">🏆 Top Performers</div>
+        {% for a in top_performers %}
+        <div class="perf-item">
+            <div>
+                <div class="p-name">{{ a.student.first_name }} {{ a.student.last_name }}</div>
+                <div class="p-user">@{{ a.student.username }}</div>
+            </div>
+            <div class="p-score status-pass">{{ a.percentage|floatformat:1 }}%</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Needs Improvement -->
+    <div class="perf-list">
+        <div class="perf-header" style="color: #ef4444;">⚠️ Needs Improvement</div>
+        {% for a in needs_improvement %}
+        <div class="perf-item">
+            <div>
+                <div class="p-name">{{ a.student.first_name }} {{ a.student.last_name }}</div>
+                <div class="p-user">@{{ a.student.username }}</div>
+            </div>
+            <div class="p-score status-fail">{{ a.percentage|floatformat:1 }}%</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endif %}
+{% endblock %}

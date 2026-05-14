@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block header_title %}All Lessons{% endblock %}
+{% block header_subtitle %}View all lessons across all subjects{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="margin: 0;">Lessons by Subject ({{ lessons|length }})</h2>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border);">
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Subject</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Course</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Lesson Title</th>
+                    <th style="padding: 1rem; text-align: center; font-weight: 600; color: var(--text);">Views</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% regroup lessons by course.subject.name as subject_list %}
+                {% for subject in subject_list %}
+                    <tr style="background: #f1f5f9; font-weight: bold;">
+                        <td colspan="4" style="padding: 0.75rem 1rem;">{{ subject.grouper }}</td>
+                    </tr>
+                    {% for lesson in subject.list %}
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 1rem; color: var(--text-light); padding-left: 2rem;">{{ lesson.course.subject.name }}</td>
+                        <td style="padding: 1rem; color: var(--text);">{{ lesson.course.title }} (Class {{ lesson.course.target_class }})</td>
+                        <td style="padding: 1rem; color: var(--text); font-weight: 600;">{{ lesson.title }}</td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <span class="badge" style="background: #eef2ff; color: #6366f1;">👁 {{ lesson.views }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-light);">No lessons found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<a href="{% url 'admin_dashboard' %}" class="btn btn-outline" style="margin-top: 1rem;">
+    ← Back to Dashboard
+</a>
+{% endblock %}

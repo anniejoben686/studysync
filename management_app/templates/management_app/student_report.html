@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Report – STUDYSYNC{% endblock %}
+{% block header_title %}Student Enrollment Report{% endblock %}
+{% block header_subtitle %}Detailed view of students and their courses{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 2rem;">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+        <div>
+            <h2 style="margin: 0;">Report Summary</h2>
+            <p style="margin: 0.5rem 0 0; color: var(--text-light); font-size: 0.875rem;">
+                <strong>Filter:</strong> {{ selected_class }} | {{ selected_subject }}
+            </p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <button onclick="window.print()" class="btn btn-outline"
+                style="display: flex; align-items: center; gap: 0.5rem;">
+                <span>🖨️</span> Print Report
+            </button>
+            <a href="{% url 'export_student_report' %}?class={{ request.GET.class }}&subject={{ request.GET.subject }}"
+                class="btn" style="background: #10b981; color: white; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📥</span> Download CSV
+            </a>
+        </div>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border); background: #f8fafc;">
+                    <th style="padding: 1rem; text-align: left; font-weight: 700; color: var(--text);">Username</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 700; color: var(--text);">Full Name</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 700; color: var(--text);">Email</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 700; color: var(--text);">Class</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 700; color: var(--text);">Enrolled Courses
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in report_data %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 1rem; color: var(--text); font-family: monospace;">{{ row.username }}</td>
+                    <td style="padding: 1rem; color: var(--text); font-weight: 600;">{{ row.full_name }}</td>
+                    <td style="padding: 1rem; color: var(--text);">{{ row.email }}</td>
+                    <td style="padding: 1rem;">
+                        <span class="badge" style="background: var(--primary-light);">{{ row.class }}</span>
+                    </td>
+                    <td style="padding: 1rem; color: var(--text-light); font-size: 0.875rem; line-height: 1.4;">
+                        {{ row.courses }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="padding: 3rem; text-align: center; color: var(--text-light);">No data
+                        available for the selected filters.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div style="margin-top: 2rem;">
+    <a href="{% url 'manage_students' %}" class="btn btn-outline">
+        ← Back to Student Management
+    </a>
+</div>
+
+<style>
+    @media print {
+
+        .sidebar,
+        .navbar,
+        .btn,
+        .btn-outline,
+        .header-subtitle {
+            display: none !important;
+        }
+
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        body {
+            background: white !important;
+        }
+
+        .content-wrapper {
+            margin-left: 0 !important;
+            padding: 0 !important;
+        }
+    }
+</style>
+{% endblock %}

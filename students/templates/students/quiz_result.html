@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}Quiz Result - {{ result.quiz_title }}{% endblock %}
+{% block header_title %}Quiz Result{% endblock %}
+{% block header_subtitle %}{{ result.quiz_title }}{% endblock %}
+
+{% block content %}
+<style>
+    .result-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    @media (max-width: 700px) { .result-grid { grid-template-columns: 1fr; } }
+
+    /* Score circle */
+    .score-circle-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+    }
+    .score-circle {
+        position: relative;
+        width: 160px;
+        height: 160px;
+        margin-bottom: 1rem;
+    }
+    .score-circle svg {
+        width: 160px;
+        height: 160px;
+        transform: rotate(-90deg);
+    }
+    .score-circle .track { fill: none; stroke: #e9ecef; stroke-width: 12; }
+    .score-circle .fill  { fill: none; stroke-width: 12; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+    .score-circle .fill.outstanding { stroke: #10b981; }
+    .score-circle .fill.good        { stroke: #3b82f6; }
+    .score-circle .fill.average     { stroke: #f59e0b; }
+    .score-circle .fill.danger      { stroke: #ef4444; }
+    .score-label {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+    .score-label .pct {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--text);
+        line-height: 1;
+    }
+    .score-label .sub { font-size: 0.78rem; color: var(--text-light); margin-top: 2px; }
+
+    /* Info rows */
+    .info-card { display: flex; flex-direction: column; gap: 0.75rem; padding: 1.5rem; }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.6rem 0.9rem;
+        border-radius: 0.5rem;
+        background: var(--surface, #f8f9fc);
+        font-size: 0.92rem;
+    }
+    .info-row label { color: var(--text-light); font-weight: 500; }
+    .info-row .val  { font-weight: 700; color: var(--text); }
+
+    /* Message banners */
+    .msg-banner {
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        font-size: 0.92rem;
+        font-weight: 500;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    .msg-banner.outstanding { background: #d1fae5; border-left: 4px solid #10b981; color: #065f46; }
+    .msg-banner.good        { background: #dbeafe; border-left: 4px solid #3b82f6; color: #1e40af; }
+    .msg-banner.average     { background: #fef3c7; border-left: 4px solid #f59e0b; color: #92400e; }
+    .msg-banner.below       { background: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; }
+    .msg-banner.improved    { background: #d1fae5; border-left: 4px solid #10b981; color: #065f46; }
+    .msg-banner.dropped     { background: #fef3c7; border-left: 4px solid #f59e0b; color: #92400e; }
+    .msg-banner.same        { background: #e0e7ff; border-left: 4px solid #6c63ff; color: #3730a3; }
+
+    /* Stat cards - class analytics */
+    .analytics-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    @media (max-width: 600px) { .analytics-row { grid-template-columns: 1fr; } }
+    .stat-mini {
+        text-align: center;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        background: var(--surface, #f8f9fc);
+        border: 1px solid var(--border);
+    }
+    .stat-mini .num  { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+    .stat-mini .desc { font-size: 0.78rem; color: var(--text-light); margin-top: 0.25rem; }
+
+    /* Feedback sentence */
+    .feedback-box {
+        background: linear-gradient(135deg, var(--primary, #6c63ff) 0%, #8b5cf6 100%);
+        color: white;
+        border-radius: 0.75rem;
+        padding: 1.25rem 1.5rem;
+        font-size: 0.92rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Action buttons */
+    .result-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .result-actions a { flex: 1; min-width: 130px; text-align: center; padding: 0.75rem 1.25rem; border-radius: 0.6rem; font-weight: 600; font-size: 0.9rem; text-decoration: none; transition: opacity 0.2s; }
+    .btn-primary-full { background: var(--primary, #6c63ff); color: white; }
+    .btn-outline-full  { border: 2px solid var(--primary, #6c63ff); color: var(--primary, #6c63ff); }
+    .btn-ghost-full    { background: var(--surface, #f8f9fc); color: var(--text); border: 1px solid var(--border); }
+    .result-actions a:hover { opacity: 0.85; }
+
+    /* perf badge */
+    .perf-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+    .perf-badge.outstanding { background: #d1fae5; color: #065f46; }
+    .perf-badge.good        { background: #dbeafe; color: #1e40af; }
+    .perf-badge.average     { background: #fef3c7; color: #92400e; }
+    .perf-badge.danger      { background: #fee2e2; color: #991b1b; }
+</style>
+
+<!-- Main result card -->
+<div class="result-grid">
+
+    <!-- Score Circle -->
+    <div class="card score-circle-wrap">
+        <div class="score-circle" id="scoreCircle">
+            <svg viewBox="0 0 160 160">
+                <circle class="track" cx="80" cy="80" r="68"/>
+                <circle class="fill {{ result.perf_css }}" cx="80" cy="80" r="68"
+                        id="fillArc"
+                        stroke-dasharray="427.26"
+                        stroke-dashoffset="427.26"/>
+            </svg>
+            <div class="score-label">
+                <div class="pct">{{ result.percentage }}%</div>
+                <div class="sub">{{ result.marks_obtained }} / {{ result.total_marks }}</div>
+            </div>
+        </div>
+        <span class="perf-badge {{ result.perf_css }}" style="margin-bottom:0.5rem;">{{ result.perf_label }}</span>
+        <p style="color:var(--text-light);font-size:0.85rem;text-align:center;margin:0;">
+            Attempt #{{ result.attempt_number }}
+            {% if result.is_best %}&nbsp;⭐ New Best!{% endif %}
+        </p>
+    </div>
+
+    <!-- Info panel -->
+    <div class="card info-card">
+        <h3 style="margin:0 0 0.5rem;">Attempt Details</h3>
+        <div class="info-row">
+            <label>Quiz</label>
+            <span class="val">{{ result.quiz_title }}</span>
+        </div>
+        <div class="info-row">
+            <label>Marks Obtained</label>
+            <span class="val">{{ result.marks_obtained }} / {{ result.total_marks }}</span>
+        </div>
+        <div class="info-row">
+            <label>Percentage</label>
+            <span class="val">{{ result.percentage }}%</span>
+        </div>
+        <div class="info-row">
+            <label>Attempt Number</label>
+            <span class="val">#{{ result.attempt_number }}</span>
+        </div>
+        <div class="info-row">
+            <label>Class</label>
+            <span class="val">Class {{ result.class_name }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Class Analytics -->
+<div class="card" style="margin-bottom:1.5rem; padding:1.5rem;">
+    <h3 style="margin:0 0 1rem;">Class Performance — Class {{ result.class_name }}</h3>
+    <div class="analytics-row">
+        <div class="stat-mini">
+            <div class="num">{{ result.class_avg }}%</div>
+            <div class="desc">Class Average</div>
+        </div>
+        <div class="stat-mini">
+            <div class="num">{{ result.class_top }}%</div>
+            <div class="desc">Top Score</div>
+        </div>
+        <div class="stat-mini">
+            <div class="num">#{{ result.student_rank }} / {{ result.total_students }}</div>
+            <div class="desc">Your Rank</div>
+        </div>
+    </div>
+
+    <!-- Class performance message -->
+    <div class="msg-banner {{ result.class_msg_type }}">
+        <span style="font-size:1.25rem;">
+            {% if result.class_msg_type == 'outstanding' %}🏆
+            {% elif result.class_msg_type == 'good' %}👍
+            {% elif result.class_msg_type == 'average' %}📊
+            {% else %}📚{% endif %}
+        </span>
+        <span>{{ result.class_msg }}</span>
+    </div>
+
+    {% if result.reattempt_msg %}
+    <div class="msg-banner {{ result.reattempt_type }}">
+        <span style="font-size:1.25rem;">
+            {% if result.reattempt_type == 'improved' %}📈
+            {% elif result.reattempt_type == 'dropped' %}📉
+            {% else %}➡️{% endif %}
+        </span>
+        <span>{{ result.reattempt_msg }}</span>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Full feedback sentence -->
+<div class="feedback-box">
+    Quiz <strong>"{{ result.quiz_title }}"</strong> submitted successfully.
+    You scored <strong>{{ result.marks_obtained }}/{{ result.total_marks }}</strong>
+    (<strong>{{ result.percentage }}%</strong>).
+    Class average: <strong>{{ result.class_avg }}%</strong>.
+    You performed <strong>{% if result.percentage >= result.class_avg %}above{% else %}below{% endif %} average</strong>
+    among Class {{ result.class_name }} students.
+    This was your attempt <strong>#{{ result.attempt_number }}</strong>.
+</div>
+
+<!-- Action buttons -->
+<div class="card" style="padding:1.5rem;">
+    <div class="result-actions">
+        <a href="{% url 'student_progress' %}" class="btn-primary-full">📊 View My Progress</a>
+        <a href="{% url 'take_quiz' result.quiz_pk %}" class="btn-outline-full">🔄 Try Again</a>
+        <a href="{% url 'student_quizzes' %}" class="btn-ghost-full">← Back to Quizzes</a>
+    </div>
+</div>
+
+<script>
+(function() {
+    const circle = document.getElementById('fillArc');
+    const pct = {{ result.percentage }};
+    const circumference = 427.26;
+    const offset = circumference - (pct / 100) * circumference;
+    setTimeout(function() {
+        circle.style.strokeDashoffset = offset;
+    }, 100);
+})();
+</script>
+{% endblock %}

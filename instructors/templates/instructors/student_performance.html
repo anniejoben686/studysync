@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block header_title %}Student Performance{% endblock %}
+{% block header_subtitle %}Monitor and filter quiz attempts across your courses.{% endblock %}
+
+{% block content %}
+<style>
+    .filter-card {
+        background: var(--surface, #f8f9fc);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        margin-bottom: 2rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: flex-end;
+    }
+    .filter-group { flex: 1; min-width: 150px; display: flex; flex-direction: column; gap: 0.35rem; }
+    .filter-group label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; }
+    .filter-input { padding: 0.65rem; border: 1px solid var(--border); border-radius: 0.5rem; font-size: 0.9rem; }
+    
+    .attempts-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .attempts-table th { padding: 0.85rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-light); border-bottom: 2px solid var(--border); background: var(--surface, #f8f9fc); }
+    .attempts-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .attempts-table tr:hover td { background: var(--surface, #f8f9fc); }
+    
+    .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+    .b-outstanding { background: #d1fae5; color: #065f46; }
+    .b-good        { background: #dbeafe; color: #1e40af; }
+    .b-average     { background: #fef3c7; color: #92400e; }
+    .b-danger      { background: #fee2e2; color: #991b1b; }
+    .b-best        { background: #ede9fe; color: #4c1d95; font-size: 0.68rem; margin-left: 0.5rem; }
+</style>
+
+<div style="margin-bottom: 1rem;">
+    <a href="{% url 'instructor_dashboard' %}" class="btn btn-outline" style="font-size: 0.85rem;">← Back to Dashboard</a>
+</div>
+
+<!-- Filters -->
+<form method="get" class="filter-card">
+    <div class="filter-group">
+        <label>Search Student</label>
+        <input type="text" name="student_name" class="filter-input" value="{{ filters.student_name }}" placeholder="Name or username">
+    </div>
+    <div class="filter-group">
+        <label>Course</label>
+        <select name="course_id" class="filter-input">
+            <option value="">All Courses</option>
+            {% for c in courses %}
+            <option value="{{ c.id }}" data-class="{{ c.target_class }}" {% if filters.course_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="filter-group">
+        <label>Class</label>
+        <select name="class_id" class="filter-input">
+            <option value="">All Classes</option>
+            <option value="8" {% if filters.class_id == "8" %}selected{% endif %}>Class 8</option>
+            <option value="9" {% if filters.class_id == "9" %}selected{% endif %}>Class 9</option>
+            <option value="10" {% if filters.class_id == "10" %}selected{% endif %}>Class 10</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label>Quiz</label>
+        <select name="quiz_id" class="filter-input">
+            <option value="">All Quizzes</option>
+            {% for q in quizzes %}
+            <option value="{{ q.id }}" data-course="{{ q.course.id }}" {% if filters.quiz_id == q.id|stringformat:"s" %}selected{% endif %}>{{ q.title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+        <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.25rem;">Filter</button>
+        <a href="?clear=1" class="btn btn-outline" style="padding: 0.65rem 1.25rem;">Clear</a>
+    </div>
+</form>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+    <div style="padding: 1.5rem; border-bottom: 1px solid var(--border);">
+        <h3 style="margin: 0;">Attempt History ({{ attempts.count }})</h3>
+    </div>
+    
+    <div style="overflow-x: auto;">
+        <table class="attempts-table">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Class</th>
+                    <th>Quiz</th>
+                    <th style="text-align:center;">Attempt</th>
+                    <th style="text-align:center;">Marks</th>
+                    <th style="text-align:center;">Percentage</th>
+                    <th style="text-align:right;">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in attempts %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600; color: var(--text);">{{ a.student.first_name }} {{ a.student.last_name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-light);">@{{ a.student.username }}</div>
+                    </td>
+                    <td>Class {{ a.student.student_profile.current_class }}</td>
+                    <td>
+                        <div style="font-weight: 500;">{{ a.quiz.title }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-light);">{{ a.quiz.course.title }}</div>
+                    </td>
+                    <td style="text-align:center;">
+                        <span style="font-size:0.8rem; background:var(--surface,#f8f9fc); padding:0.2rem 0.5rem; border-radius:0.4rem; font-weight:600;">#{{ a.attempt_number }}</span>
+                        {% if a.is_best %}<br><span class="badge b-best" style="margin:0.25rem 0 0 0;">Best</span>{% endif %}
+                    </td>
+                    <td style="text-align:center; font-weight:600;">{{ a.marks_obtained }}/{{ a.total_marks }}</td>
+                    <td style="text-align:center;">
+                        <span class="badge 
+                            {% if a.percentage >= 85 %}b-outstanding
+                            {% elif a.percentage >= 60 %}b-good
+                            {% elif a.percentage >= 40 %}b-average
+                            {% else %}b-danger{% endif %}">
+                            {{ a.percentage|floatformat:1 }}%
+                        </span>
+                    </td>
+                    <td style="text-align:right; font-size:0.85rem; color:var(--text-light);">
+                        {{ a.submitted_at|date:"M d, Y h:i a" }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-light);">
+                        No attempts match your filters.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const classSelect = document.querySelector('select[name="class_id"]');
+    const courseSelect = document.querySelector('select[name="course_id"]');
+    const quizSelect = document.querySelector('select[name="quiz_id"]');
+
+    function filterCourses() {
+        const cls = classSelect.value;
+        Array.from(courseSelect.options).forEach(opt => {
+            if (!opt.value) return; // skip "All Courses"
+            if (!cls || opt.dataset.class === cls) {
+                opt.style.display = '';
+            } else {
+                opt.style.display = 'none';
+                if (opt.selected) courseSelect.value = '';
+            }
+        });
+        filterQuizzes();
+    }
+
+    function filterQuizzes() {
+        const crs = courseSelect.value;
+        Array.from(quizSelect.options).forEach(opt => {
+            if (!opt.value) return; // skip "All Quizzes"
+            if (!crs || opt.dataset.course === crs) {
+                opt.style.display = '';
+            } else {
+                opt.style.display = 'none';
+                if (opt.selected) quizSelect.value = '';
+            }
+        });
+    }
+
+    classSelect.addEventListener('change', filterCourses);
+    courseSelect.addEventListener('change', filterQuizzes);
+
+    // Initial cascade on load
+    filterCourses();
+});
+</script>
+{% endblock %}

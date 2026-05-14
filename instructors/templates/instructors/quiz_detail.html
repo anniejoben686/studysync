@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block header_title %}{{ quiz.title }}{% endblock %}
+{% block header_subtitle %}Course: {{ quiz.course.title }} | Class: {{ quiz.course.target_class }}{% endblock %}
+
+{% block content %}
+<style>
+    .action-bar { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    
+    .config-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.25rem; margin-bottom: 2rem;
+    }
+    .config-item {
+        background: white; border: 1px solid var(--border); border-radius: 0.5rem;
+        padding: 1rem;
+    }
+    .config-label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-light); font-weight: 700; margin-bottom: 0.25rem; }
+    .config-val { font-size: 1rem; font-weight: 600; color: var(--text); }
+    
+    .status-badge {
+        display: inline-block; padding: 0.25rem 0.65rem; border-radius: 999px;
+        font-size: 0.75rem; font-weight: 700; margin-left: auto;
+    }
+    .status-active { background: #d1fae5; color: #065f46; }
+    .status-inactive { background: #fee2e2; color: #991b1b; }
+
+    .q-card { padding: 1.5rem; border: 1px solid var(--border); border-radius: 0.75rem; background: white; margin-bottom: 1.25rem; }
+    .q-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+    .q-title { margin: 0; font-size: 1.1rem; line-height: 1.4; }
+    .q-marks { background: var(--surface, #f8f9fc); border: 1px solid var(--border); padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; color: var(--primary); white-space: nowrap; margin-left: 1rem; }
+    
+    .c-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+    .c-item { padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .c-correct { background: #ecfdf5; border-color: #10b981; color: #065f46; font-weight: 500; }
+    
+    .q-expl { margin-top: 1rem; padding: 1rem; background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 0.25rem; font-size: 0.85rem; }
+    .btn-secondary { background: var(--surface, #f8f9fc); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: #e2e8f0; }
+</style>
+
+<!-- Actions -->
+<div class="action-bar">
+    <a href="{% url 'course_detail_instructor' quiz.course.id %}" class="btn btn-outline">← Back to Course</a>
+    <a href="{% url 'question_create' quiz.id %}" class="btn btn-primary">+ Add New Question</a>
+    <a href="{% url 'quiz_analytics' quiz.id %}" class="btn" style="background:var(--secondary);color:white;margin-left:auto;">📊 View Analytics</a>
+</div>
+
+<!-- Configuration Summary -->
+<div class="card" style="padding: 1.5rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+        <h3 style="margin: 0; font-size: 1.15rem;">Quiz Configuration</h3>
+        <span class="status-badge {% if quiz.is_published %}status-active{% else %}status-inactive{% endif %}">
+            {% if quiz.is_published %}● Published{% else %}● Draft{% endif %}
+        </span>
+    </div>
+    
+    <div class="config-grid">
+        <div class="config-item">
+            <div class="config-label">Duration</div>
+            <div class="config-val">{% if quiz.duration > 0 %}{{ quiz.duration }} Minutes{% else %}Unlimited{% endif %}</div>
+        </div>
+        <div class="config-item">
+            <div class="config-label">Pass Percentage</div>
+            <div class="config-val">{{ quiz.pass_percentage }}%</div>
+        </div>
+        <div class="config-item">
+            <div class="config-label">Attempt Policy</div>
+            <div class="config-val">
+                {% if quiz.max_attempts > 0 %}Max {{ quiz.max_attempts }}{% else %}Unlimited{% endif %}
+                <br>
+                <span style="font-size:0.75rem; color:var(--text-light); font-weight:normal;">Uses {{ quiz.get_attempt_policy_display }}</span>
+            </div>
+        </div>
+        <div class="config-item">
+            <div class="config-label">Questions</div>
+            <div class="config-val">
+                {{ questions.count }}
+                {% if quiz.shuffle_questions %} <span style="font-size:0.75rem; color:var(--text-light); font-weight:normal;">(Randomized)</span>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Questions List -->
+<div>
+    <h3 style="margin-bottom: 1.25rem;">Questions List</h3>
+    
+    {% if questions %}
+        {% for question in questions %}
+            <div class="q-card">
+                <div class="q-header">
+                    <h4 class="q-title">{{ forloop.counter }}. {{ question.text|linebreaksbr }}</h4>
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <span class="q-marks">{{ question.marks }} Mark{% if question.marks > 1 %}s{% endif %}</span>
+                        <a href="{% url 'question_edit' question.id %}" class="btn btn-outline" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">✏️ Edit</a>
+                        <a href="{% url 'question_delete' question.id %}" class="btn" style="padding: 0.2rem 0.6rem; font-size: 0.8rem; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;">🗑️ Delete</a>
+                    </div>
+                </div>
+                
+                <ul class="c-list">
+                    {% for choice in question.choices.all %}
+                        <li class="c-item {% if choice.is_correct %}c-correct{% endif %}">
+                            <span>{{ choice.text }}</span>
+                            {% if choice.is_correct %}<span>✓ Correct Answer</span>{% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+                
+                {% if question.explanation %}
+                <div class="q-expl">
+                    <strong>Feedback / Explanation:</strong><br>
+                    {{ question.explanation|linebreaksbr }}
+                </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="card" style="text-align: center; padding: 3rem 0;">
+            <p style="color:var(--text-light); margin-bottom:1rem;">No questions added to this quiz yet.</p>
+            <a href="{% url 'question_create' quiz.id %}" class="btn btn-primary">Add the first question</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

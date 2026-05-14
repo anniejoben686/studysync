@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block header_title %}Available Quizzes{% endblock %}
+{% block header_subtitle %}Test your knowledge on completed modules{% endblock %}
+
+{% block content %}
+<div class="grid">
+    {% for quiz in quizzes %}
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+            <h3 style="margin: 0; font-size: 1.25rem;">{{ quiz.title }}</h3>
+            <span class="badge" style="background: var(--secondary-light);">{{ quiz.questions.count }} Questions</span>
+        </div>
+        
+        <p style="font-size: 0.875rem; color: var(--text-light); border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1rem;">
+            Course: {{ quiz.course.title }}
+        </p>
+        
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="#" class="btn btn-primary" style="flex: 1; text-align: center; padding: 0.5rem;">Take Quiz</a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+        <h3>No Quizzes Available</h3>
+        <p>There are no quizzes available for your courses yet.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block header_title %}Student Performance{% endblock %}
+{% block header_subtitle %}Review quiz scores across all your courses.{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <a href="{% url 'instructor_dashboard' %}" class="btn btn-outline">← Back to Dashboard</a>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom: 1.5rem; color: var(--text);">Recent Quiz Attempts</h3>
+    
+    {% if attempts %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border); color: var(--text-light);">
+                        <th style="padding: 1rem 0.5rem;">Student</th>
+                        <th style="padding: 1rem 0.5rem;">Course</th>
+                        <th style="padding: 1rem 0.5rem;">Quiz</th>
+                        <th style="padding: 1rem 0.5rem;">Score</th>
+                        <th style="padding: 1rem 0.5rem;">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attempt in attempts %}
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 1rem 0.5rem; font-weight: 500;">{{ attempt.student.username }}</td>
+                        <td style="padding: 1rem 0.5rem; color: var(--text-light);">{{ attempt.quiz.course.title }}</td>
+                        <td style="padding: 1rem 0.5rem;">{{ attempt.quiz.title }}</td>
+                        <td style="padding: 1rem 0.5rem;">
+                            <span class="badge" style="{% if attempt.score >= 50 %}background: var(--secondary);{% else %}background: var(--danger);{% endif %}">
+                                {{ attempt.score }}%
+                            </span>
+                        </td>
+                        <td style="padding: 1rem 0.5rem; color: var(--text-light); font-size: 0.875rem;">{{ attempt.attempted_on|date:"M d, Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3rem 0; color: var(--text-light);">
+            <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto 1rem; opacity: 0.5;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            <p>No students have taken any quizzes in your courses yet.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

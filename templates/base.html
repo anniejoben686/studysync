@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}STUDYSYNC{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="brand">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0"></path></svg>
+            STUDYSYNC
+        </div>
+
+        <nav class="nav-links">
+            {% if user.role == 'INSTRUCTOR' %}
+            <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'instructor_dashboard' %}active{% endif %}">📊 Dashboard</a>
+            <a href="{% url 'instructor_dashboard' %}" class="{% if request.resolver_match.url_name == 'instructor_dashboard' %}active{% endif %}">📚 My Courses</a>
+            <a href="{% url 'course_create' %}" class="{% if request.resolver_match.url_name == 'course_create' %}active{% endif %}">✏️ Create Content</a>
+            <a href="{% url 'student_performance' %}" class="{% if request.resolver_match.url_name == 'student_performance' %}active{% endif %}">📈 View Scores</a>
+            {% elif user.role == 'ADMIN' %}
+            <a href="{% url 'admin_dashboard' %}" class="{% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">📊 Dashboard</a>
+            <a href="{% url 'manage_students' %}" class="{% if request.resolver_match.url_name == 'manage_students' %}active{% endif %}">👨‍🎓 Manage Students</a>
+            <a href="{% url 'manage_instructors' %}" class="{% if request.resolver_match.url_name == 'manage_instructors' %}active{% endif %}">👩‍🏫 Manage Instructors</a>
+            <a href="{% url 'manage_subjects' %}" class="{% if request.resolver_match.url_name == 'manage_subjects' %}active{% endif %}">📖 Manage Subjects</a>
+            <a href="{% url 'manage_courses' %}" class="{% if request.resolver_match.url_name == 'manage_courses' %}active{% endif %}">📚 Manage Courses</a>
+            {% elif user.role == 'STUDENT' %}
+            <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}">Dashboard</a>
+            <a href="{% url 'student_courses' %}" class="{% if request.resolver_match.url_name == 'student_courses' or request.resolver_match.url_name == 'course_detail_student' %}active{% endif %}">My Courses</a>
+            <a href="{% url 'student_quizzes' %}" class="{% if request.resolver_match.url_name == 'student_quizzes' %}active{% endif %}">Quizzes</a>
+            <a href="{% url 'student_progress' %}" class="{% if request.resolver_match.url_name == 'student_progress' %}active{% endif %}">My Progress</a>
+            {% endif %}
+            
+            <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--border);">
+            
+            <a href="{% url 'password_change' %}" style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 0.5rem; display: block;">Settings & Security</a>
+            
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" style="color: var(--danger); font-weight: bold;">Logout</button>
+            </form>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="header">
+            <div>
+                <h1>{% block header_title %}Welcome, {{ user.username }}{% endblock %}</h1>
+                <p style="color: var(--text-light);">{% block header_subtitle %}Here is your snapshot{% endblock %}</p>
+            </div>
+            
+            <div class="user-profile">
+                <span class="badge">{{ user.get_role_display }}</span>
+                {% if user.role == 'STUDENT' %}
+                    <span class="badge" style="background: var(--secondary);">Class {{ user.student_profile.current_class }}</span>
+                {% endif %}
+                <div style="width: 40px; height: 40px; background: var(--primary); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;">
+                    {{ user.username|make_list|first|upper }}
+                </div>
+            </div>
+        </header>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div style="padding: 1rem; margin-bottom: 1rem; border-radius: 0.5rem; background: {% if message.tags == 'error' %}var(--danger){% else %}var(--secondary){% endif %}; color: white;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block extra_js %}{% endblock %}
+
+    <!-- Prevent browser back navigation: force reload if page loaded from BFCache -->
+    <script>
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                // Page was restored from browser back-forward cache — force reload
+                window.location.reload();
+            }
+        });
+    </script>
+</body>
+</html>

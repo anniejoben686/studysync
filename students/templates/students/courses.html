@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block header_title %}My Courses{% endblock %}
+{% block header_subtitle %}All courses available for your class{% endblock %}
+
+{% block content %}
+<div class="grid">
+    {% for course in courses %}
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+            <h3 style="margin: 0; font-size: 1.25rem;">{{ course.title }}</h3>
+            <span class="badge" style="background: var(--surface); color: var(--primary); border: 1px solid var(--primary);">{{ course.lessons.count }} Lessons</span>
+        </div>
+        
+        <p style="font-size: 0.875rem; color: var(--text-light); border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1rem;">
+            Instructor: {{ course.instructor.username }}<br>
+            Subject: {{ course.subject.name }}
+        </p>
+        
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{% url 'course_detail_student' course.pk %}" class="btn btn-primary" style="flex: 1; text-align: center; padding: 0.5rem;">Start Learning</a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+        <h3>No Courses Found</h3>
+        <p>You haven't been assigned any courses yet.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

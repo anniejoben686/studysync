@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block header_title %}{{ title }}{% endblock %}
+{% block header_subtitle %}Manage user account information{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <h2 style="margin-bottom: 2rem; color: var(--text);">{{ title }}</h2> <!-- Create New Instructor Form - Updated -->
+
+    {% if target_user %}
+    <form method="post" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="username" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text);">Username *</label>
+            <input type="text" id="username" name="username" value="{{ target_user.username }}" required
+                   minlength="3" maxlength="30" pattern="[a-zA-Z0-9_]+" title="Username must be 3-30 characters long and contain only letters, numbers, and underscores"
+                   style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="first_name" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text);">First Name</label>
+                <input type="text" id="first_name" name="first_name" value="{{ target_user.first_name }}"
+                       maxlength="50" pattern="[a-zA-Z\s]+" title="First name must contain only letters and spaces"
+                       style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;">
+            </div>
+
+            <div class="form-group">
+                <label for="last_name" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text);">Last Name</label>
+                <input type="text" id="last_name" name="last_name" value="{{ target_user.last_name }}"
+                       maxlength="50" pattern="[a-zA-Z\s]+" title="Last name must contain only letters and spaces"
+                       style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="email" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text);">Email *</label>
+            <input type="email" id="email" name="email" value="{{ target_user.email }}" required
+                   maxlength="254" title="Please enter a valid email address"
+                   style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;">
+        </div>
+
+        <!-- Hidden field to maintain current role -->
+        <input type="hidden" name="role" value="{{ target_user.role }}">
+
+        <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; color: var(--text);">
+                <input type="checkbox" name="is_active" {% if target_user.is_active %}checked{% endif %}
+                       style="width: 1.2rem; height: 1.2rem;">
+                Account Active
+            </label>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Update User</button>
+            <a href="{% url 'manage_instructors' %}" class="btn btn-outline" style="flex: 1; text-align: center;">Cancel</a>
+        </div>
+    </form>
+    {% else %}
+    <form method="post" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        {% csrf_token %}
+        
+        {% if form.errors %}
+        <div style="background: #fee; border: 1px solid #fcc; color: #c33; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+            <strong>Please correct the following errors:</strong>
+            <ul style="margin-top: 0.5rem;">
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <li>{{ field|title }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="username" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text);">Username *</label>
+            <input type="text" id="username" name="username" required
+                   minlength="3" maxlength="30" pattern="[a-zA-Z0-9_]+" title="Username must be 3-30 characters long and contain only letters, numbers, and underscores"
+                   style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="first_name" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text);">First Name</label>
+                <input type="text" id="first_name" name="first_name"
+                       maxlength="50" pattern="[a-zA-Z\s]+" title="First name must contain only letters and spaces"
+                       style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;">
+            </div>
+
+            <div class="form-group">
+                <label for="last_name" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text);">Last Name</label>
+                <input type="text" id="last_name" name="last_name"
+                       maxlength="50" pattern="[a-zA-Z\s]+" title="Last name must contain only letters and spaces"
+                       style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="email" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text);">Email *</label>
+            <input type="email" id="email" name="email" required
+                   maxlength="254" title="Please enter a valid email address"
+                   style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;">
+        </div>
+
+        <div class="form-group">
+            <label for="password1" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text);">Password *</label>
+            <input type="password" id="password1" name="password1" required
+                   style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;">
+        </div>
+
+        <div class="form-group">
+            <label for="password2" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text);">Confirm Password *</label>
+            <input type="password" id="password2" name="password2" required
+                   style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;">
+        </div>
+
+        <!-- Hidden field to set role as INSTRUCTOR -->
+        <input type="hidden" name="role" value="INSTRUCTOR">
+
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Create New Instructor</button>
+            <a href="{% url 'manage_instructors' %}" class="btn btn-outline" style="flex: 1; text-align: center;">Cancel</a>
+        </div>
+    </form>
+    {% endif %}
+</div>
+
+<style>
+.form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+</style>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block header_title %}Add Question to {{ quiz.title }}{% endblock %}
+{% block header_subtitle %}Enter the question and exactly four options.{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <form method="post">
+        {% csrf_token %}
+        
+        <h3 style="margin-bottom: 1rem;">The Question</h3>
+        <div class="form-group" style="margin-bottom: 2rem;">
+            <label for="{{ q_form.text.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Question Text</label>
+            {{ q_form.text }}
+        </div>
+        
+        <h3 style="margin-bottom: 1rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">Multiple Choices</h3>
+        <p style="color: var(--text-light); font-size: 0.875rem; margin-bottom: 1.5rem;">Please provide 4 choices and check the box for the correct answer.</p>
+        
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <!-- Choice 1 -->
+            <div style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--background);">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Option A Text</label>
+                    {{ c1_form.text }}
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    {{ c1_form.is_correct }}
+                    <label for="{{ c1_form.is_correct.id_for_label }}" style="margin: 0; font-weight: 500; color: var(--secondary);">Is this the correct answer?</label>
+                </div>
+            </div>
+            
+            <!-- Choice 2 -->
+            <div style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--background);">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Option B Text</label>
+                    {{ c2_form.text }}
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    {{ c2_form.is_correct }}
+                    <label for="{{ c2_form.is_correct.id_for_label }}" style="margin: 0; font-weight: 500; color: var(--secondary);">Is this the correct answer?</label>
+                </div>
+            </div>
+            
+            <!-- Choice 3 -->
+            <div style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--background);">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Option C Text</label>
+                    {{ c3_form.text }}
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    {{ c3_form.is_correct }}
+                    <label for="{{ c3_form.is_correct.id_for_label }}" style="margin: 0; font-weight: 500; color: var(--secondary);">Is this the correct answer?</label>
+                </div>
+            </div>
+            
+            <!-- Choice 4 -->
+            <div style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--background);">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Option D Text</label>
+                    {{ c4_form.text }}
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    {{ c4_form.is_correct }}
+                    <label for="{{ c4_form.is_correct.id_for_label }}" style="margin: 0; font-weight: 500; color: var(--secondary);">Is this the correct answer?</label>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary">Save Question</button>
+            <a href="{% url 'quiz_detail_instructor' quiz.id %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

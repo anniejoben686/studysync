@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Take Quiz - {{ quiz.title }}{% endblock %}
+
+{% block header_title %}{{ quiz.title }}{% endblock %}
+{% block header_subtitle %}Please answer all questions and submit when finished.{% endblock %}
+
+{% block content %}
+<div class="card">
+    <form action="{% url 'submit_quiz' quiz.id %}" method="post">
+        {% csrf_token %}
+        
+        {% for question in questions %}
+        <div style="margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
+            <h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: var(--text);">
+                {{ forloop.counter }}. {{ question.text }}
+            </h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                {% for choice in question.choices.all %}
+                <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); transition: all 0.2s;" class="choice-label">
+                    <input type="radio" name="question_{{ question.id }}" value="{{ choice.id }}" required style="margin-top: 0.25rem;">
+                    <span>{{ choice.text }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+        
+        <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+            <a href="{% url 'student_quizzes' %}" class="btn btn-outline" style="padding: 0.75rem 1.5rem;">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem; font-weight: 600;">Submit Quiz</button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .choice-label:hover {
+        background-color: var(--surface);
+        border-color: var(--primary-light);
+    }
+    .choice-label:has(input:checked) {
+        background-color: rgba(var(--primary-rgb), 0.1);
+        border-color: var(--primary);
+        font-weight: 500;
+    }
+</style>
+{% endblock %}

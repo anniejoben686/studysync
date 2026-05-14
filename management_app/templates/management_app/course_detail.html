@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block header_title %}{{ course.title }}{% endblock %}
+{% block header_subtitle %}View lessons and quizzes for this course.{% endblock %}
+
+{% block content %}
+<div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+    <a href="{% url 'manage_courses' %}" class="btn btn-outline">← Back to Manage Courses</a>
+</div>
+
+<div class="grid" style="grid-template-columns: 1fr 1fr;">
+    <!-- Lessons List -->
+    <div class="card">
+        <h3
+            style="margin-bottom: 1.5rem; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">
+            Lessons</h3>
+        {% if lessons %}
+        <ul style="list-style: none; padding: 0;">
+            {% for lesson in lessons %}
+            <li
+                style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; margin-bottom: 1rem; background: var(--background);">
+                <h4 style="margin: 0 0 0.75rem 0;">{{ lesson.title }}</h4>
+                <div style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.875rem;">
+                    {% if lesson.video_url %}
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                        <span style="color: var(--text-light);">🎥 Video:</span>
+                        <a href="{{ lesson.video_url }}" target="_blank"
+                            style="color: var(--primary); text-decoration: none; word-break: break-all;">
+                            {{ lesson.video_url|truncatechars:60 }}
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% if lesson.document %}
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="color: var(--text-light);">📄 Document:</span>
+                        <a href="{{ lesson.document.url }}" target="_blank" class="btn btn-outline"
+                            style="padding: 0.2rem 0.75rem; font-size: 0.8rem; display:inline-flex; align-items:center; gap:0.25rem;">
+                            📥 View / Download
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% if lesson.notes %}
+                    <p style="color: var(--text-light); margin: 0.25rem 0 0; font-size: 0.82rem;">📝 {{
+                        lesson.notes|truncatechars:80 }}</p>
+                    {% endif %}
+
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; border-top: 1px solid var(--border); padding-top: 0.75rem;">
+                        <span style="color: var(--text-light);">👁️ {{ lesson.views }} Views</span>
+                    </div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p style="color: var(--text-light);">No lessons added yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Quizzes List -->
+    <div class="card">
+        <h3
+            style="margin-bottom: 1.5rem; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">
+            Quizzes</h3>
+        {% if quizzes %}
+        <ul style="list-style: none; padding: 0;">
+            {% for quiz in quizzes %}
+            <li
+                style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; margin-bottom: 1rem; background: var(--background); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="margin: 0 0 0.5rem 0;">{{ quiz.title }}</h4>
+                    <span style="font-size: 0.875rem; color: var(--text-light);">{{ quiz.questions.count }}
+                        Questions</span>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p style="color: var(--text-light);">No quizzes added yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

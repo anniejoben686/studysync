@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block header_title %}Add Question to {{ quiz.title }}{% endblock %}
+{% block header_subtitle %}Configure question text, marks, feedback, and choices.{% endblock %}
+
+{% block content %}
+<style>
+    .card-section {
+        background: white; border: 1px solid var(--border); border-radius: 0.75rem;
+        padding: 1.5rem; margin-bottom: 1.5rem;
+    }
+    .card-section h3 { margin-top: 0; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text); }
+</style>
+
+<div style="max-width: 900px; margin: 0 auto;">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="card-section">
+            <h3 style="color: var(--primary);">1. The Question</h3>
+            <div class="form-group">
+                <label for="{{ q_form.text.id_for_label }}">Question Text</label>
+                {{ q_form.text }}
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem;">
+                <div class="form-group">
+                    <label for="{{ q_form.marks.id_for_label }}">Marks/Weight</label>
+                    {{ q_form.marks }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ q_form.explanation.id_for_label }}">Explanation/Feedback</label>
+                    {{ q_form.explanation }}
+                    <span style="font-size: 0.8rem; color: var(--text-light);">Optional context shown to students after submitting.</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-section" style="background: var(--surface, #f8f9fc);">
+            <h3 style="color: var(--secondary);">2. Multiple Choices</h3>
+            <p style="color: var(--text-light); font-size: 0.85rem; margin-bottom: 1.5rem;">Please provide 4 choices and check the box for the correct answer.</p>
+            
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <!-- Choice 1 -->
+                <div style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; background: white;">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Option A Text</label>
+                        {{ c1_form.text }}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        {{ c1_form.is_correct }}
+                        <label for="{{ c1_form.is_correct.id_for_label }}" style="margin: 0; font-weight: 600; color: var(--secondary);">✓ Correct Answer</label>
+                    </div>
+                </div>
+                
+                <!-- Choice 2 -->
+                <div style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; background: white;">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Option B Text</label>
+                        {{ c2_form.text }}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        {{ c2_form.is_correct }}
+                        <label for="{{ c2_form.is_correct.id_for_label }}" style="margin: 0; font-weight: 600; color: var(--secondary);">✓ Correct Answer</label>
+                    </div>
+                </div>
+                
+                <!-- Choice 3 -->
+                <div style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; background: white;">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Option C Text</label>
+                        {{ c3_form.text }}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        {{ c3_form.is_correct }}
+                        <label for="{{ c3_form.is_correct.id_for_label }}" style="margin: 0; font-weight: 600; color: var(--secondary);">✓ Correct Answer</label>
+                    </div>
+                </div>
+                
+                <!-- Choice 4 -->
+                <div style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; background: white;">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Option D Text</label>
+                        {{ c4_form.text }}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        {{ c4_form.is_correct }}
+                        <label for="{{ c4_form.is_correct.id_for_label }}" style="margin: 0; font-weight: 600; color: var(--secondary);">✓ Correct Answer</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.75rem 2rem;">💾 Save Question</button>
+            <a href="{% url 'quiz_detail_instructor' quiz.id %}" class="btn btn-outline" style="font-size: 1.1rem; padding: 0.75rem 2rem;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

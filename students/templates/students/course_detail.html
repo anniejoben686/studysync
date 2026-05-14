@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block header_title %}{{ course.title }}{% endblock %}
+{% block header_subtitle %}Taught by {{ course.instructor.username }} • {{ course.subject.name }}{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1fr 300px; gap: 2rem;">
+    <!-- Lessons Section -->
+    <div class="card">
+        <h2 style="margin-bottom: 1.5rem;">Lessons</h2>
+        {% if lessons %}
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {% for lesson in lessons %}
+                <div style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h4 style="margin: 0;">{{ lesson.title }}</h4>
+                        <div style="font-size: 0.8rem; color: var(--text-light); margin-top: 0.25rem;">
+                            {% if lesson.video_url %}Video Included{% endif %}
+                            {% if lesson.document %} • Document Included{% endif %}
+                        </div>
+                    </div>
+                    <a href="{% url 'lesson_detail' lesson.pk %}" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.875rem;">View Lesson</a>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="text-align: center; color: var(--text-light); padding: 2rem;">No lessons added to this course yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Quizzes Section -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div class="card">
+            <h3 style="margin-bottom: 1rem;">Course Quizzes</h3>
+            {% if quizzes %}
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    {% for quiz in quizzes %}
+                    <div style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem;">
+                        <div style="font-weight: 500; margin-bottom: 0.5rem;">{{ quiz.title }}</div>
+                        <a href="#" class="btn btn-primary" style="width: 100%; display: block; text-align: center; padding: 0.4rem; font-size: 0.875rem;">Take Quiz</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: var(--text-light); font-size: 0.875rem;">No quizzes for this course.</p>
+            {% endif %}
+        </div>
+        
+        <a href="{% url 'student_courses' %}" class="btn btn-outline" style="text-align: center;">← Back to Courses</a>
+    </div>
+</div>
+{% endblock %}

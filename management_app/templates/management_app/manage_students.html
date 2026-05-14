@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block header_title %}Manage Students{% endblock %}
+{% block header_subtitle %}View and manage all students{% endblock %}
+
+{% block content %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <h2 style="margin: 0;">All Students ({{ users|length }})</h2>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="{% url 'student_report_view' %}?class={{ selected_class|default:'' }}&subject={{ selected_subject|default:'' }}" class="btn btn-outline" style="display: flex; align-items: center; gap: 0.5rem;">
+                <span>👁️</span> View Report
+            </a>
+            <a href="{% url 'export_student_report' %}?class={{ selected_class|default:'' }}&subject={{ selected_subject|default:'' }}" class="btn" style="background: #10b981; color: white; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📥</span> Download Report (CSV)
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <form method="get" style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; background: #f8fafc; padding: 1.25rem; border-radius: 10px; border: 1px solid var(--border);">
+        <div style="display: flex; flex-direction: column; gap: 0.4rem; flex: 1; min-width: 200px;">
+            <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-light);">Filter by Class</label>
+            <select name="class" style="padding: 0.6rem; border-radius: 6px; border: 1px solid var(--border); background: white;">
+                <option value="">All Classes</option>
+                <option value="8" {% if selected_class == '8' %}selected{% endif %}>Class 8</option>
+                <option value="9" {% if selected_class == '9' %}selected{% endif %}>Class 9</option>
+                <option value="10" {% if selected_class == '10' %}selected{% endif %}>Class 10</option>
+            </select>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.4rem; flex: 2; min-width: 250px;">
+            <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-light);">Filter by Subject</label>
+            <select name="subject" style="padding: 0.6rem; border-radius: 6px; border: 1px solid var(--border); background: white;">
+                <option value="">All Subjects</option>
+                {% for subject in subjects %}
+                <option value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"i" %}selected{% endif %}>{{ subject.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="display: flex; align-items: flex-end; gap: 0.5rem;">
+            <button type="submit" class="btn" style="background: var(--primary); color: white; padding: 0.6rem 1.5rem;">Apply Filters</button>
+            <a href="{% url 'manage_students' %}" class="btn btn-outline" style="padding: 0.6rem 1rem;">Reset</a>
+        </div>
+    </form>
+
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border);">
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Username</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Name</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Email</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Class</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Quiz Attempts</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Status</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Joined</th>
+                    <th style="padding: 1rem; text-align: center; font-weight: 600; color: var(--text);">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 1rem; color: var(--text);">{{ user.username }}</td>
+                    <td style="padding: 1rem; color: var(--text);">{{ user.get_full_name|default:user.username }}</td>
+                    <td style="padding: 1rem; color: var(--text);">{{ user.email|default:'-' }}</td>
+                    <td style="padding: 1rem;">
+                        <span class="badge" style="background: var(--primary-light); min-width: 70px; display: inline-block; text-align: center;">Class {{ user.student_profile.current_class|default:'N/A' }}</span>
+                    </td>
+                    <td style="padding: 1rem; color: var(--text);">{{ user.quiz_attempts.count|default:0 }}</td>
+                    <td style="padding: 1rem;">
+                        <span class="badge" style="background: {% if user.is_active %}#10b981{% else %}#ef4444{% endif %};">{{ user.is_active|yesno:"Active,Inactive" }}</span>
+                    </td>
+                    <td style="padding: 1rem; color: var(--text-light);">{{ user.date_joined|date:"M d, Y" }}</td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                            <a href="{% url 'edit_user' user.pk %}" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Edit</a>
+                            {% if user != request.user %}
+                                <form method="post" action="{% url 'delete_user' user.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn" style="padding: 0.5rem 1rem; font-size: 0.875rem; background: var(--danger); color: white;">Delete</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="padding: 2rem; text-align: center; color: var(--text-light);">No students found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<a href="{% url 'admin_dashboard' %}" class="btn btn-outline" style="margin-top: 1rem;">
+    ← Back to Dashboard
+</a>
+{% endblock %}

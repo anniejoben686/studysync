@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block header_title %}{{ quiz.title }}{% endblock %}
+{% block header_subtitle %}Manage questions for this quiz in {{ quiz.course.title }}{% endblock %}
+
+{% block content %}
+<div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+    <a href="{% url 'course_detail_instructor' quiz.course.id %}" class="btn btn-outline">← Back to Course</a>
+    <a href="{% url 'question_create' quiz.id %}" class="btn btn-primary">+ Add New Question</a>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom: 1.5rem; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">Questions List ({{ questions.count }})</h3>
+    
+    {% if questions %}
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            {% for question in questions %}
+                <div style="padding: 1.5rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--background);">
+                    <h4 style="margin: 0 0 1rem 0; font-size: 1.125rem;">{{ forloop.counter }}. {{ question.text }}</h4>
+                    
+                    <ul style="list-style-type: none; padding-left: 0; display: flex; flex-direction: column; gap: 0.5rem;">
+                        {% for choice in question.choices.all %}
+                            <li style="padding: 0.75rem 1rem; border-radius: 0.25rem; {% if choice.is_correct %}background: rgba(16, 185, 129, 0.1); border: 1px solid var(--secondary); color: var(--secondary); font-weight: 500;{% else %}background: white; border: 1px solid var(--border);{% endif %}">
+                                {{ choice.text }} 
+                                {% if choice.is_correct %}<span style="float: right;">✓ Correct Answer</span>{% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3rem 0; color: var(--text-light);">
+            <p>No questions added to this quiz yet.</p>
+            <a href="{% url 'question_create' quiz.id %}" class="btn btn-outline" style="margin-top: 1rem;">Add the first question</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

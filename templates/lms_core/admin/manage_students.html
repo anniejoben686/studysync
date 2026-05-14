@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block header_title %}Manage Students{% endblock %}
+{% block header_subtitle %}View and manage all students{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 2rem;">
+    <h2 style="margin-bottom: 1.5rem;">All Students ({{ users|length }})</h2>
+
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border);">
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Username</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Name</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Email</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Class</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Quiz Attempts</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Status</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Joined</th>
+                    <th style="padding: 1rem; text-align: center; font-weight: 600; color: var(--text);">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 1rem; color: var(--text);">{{ user.username }}</td>
+                    <td style="padding: 1rem; color: var(--text);">{{ user.get_full_name|default:user.username }}</td>
+                    <td style="padding: 1rem; color: var(--text);">{{ user.email|default:'-' }}</td>
+                    <td style="padding: 1rem;">
+                        <span class="badge" style="background: var(--primary-light); min-width: 70px; display: inline-block; text-align: center;">Class {{ user.student_profile.current_class|default:'N/A' }}</span>
+                    </td>
+                    <td style="padding: 1rem; color: var(--text);">{{ user.quiz_attempts.count|default:0 }}</td>
+                    <td style="padding: 1rem;">
+                        <span class="badge" style="background: {% if user.is_active %}#10b981{% else %}#ef4444{% endif %};">{{ user.is_active|yesno:"Active,Inactive" }}</span>
+                    </td>
+                    <td style="padding: 1rem; color: var(--text-light);">{{ user.date_joined|date:"M d, Y" }}</td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                            <a href="{% url 'edit_user' user.pk %}" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Edit</a>
+                            {% if user != request.user %}
+                                <form method="post" action="{% url 'delete_user' user.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn" style="padding: 0.5rem 1rem; font-size: 0.875rem; background: var(--danger); color: white;">Delete</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="padding: 2rem; text-align: center; color: var(--text-light);">No students found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<a href="{% url 'admin_dashboard' %}" class="btn btn-outline" style="margin-top: 1rem;">
+    ← Back to Dashboard
+</a>
+{% endblock %}

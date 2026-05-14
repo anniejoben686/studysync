@@ -1,0 +1,482 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard – STUDYSYNC{% endblock %}
+{% block header_title %}Admin Dashboard{% endblock %}
+{% block header_subtitle %}System overview and analytics{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+
+<!-- ============ STAT CARDS ============ -->
+<div class="dash-stats">
+    <a href="{% url 'manage_students' %}" class="stat-card purple" style="text-decoration: none; display: flex;">
+        <div class="stat-icon purple">👨‍🎓</div>
+        <div class="stat-info">
+            <h4>{{ total_students }}</h4>
+            <p>Total Students</p>
+            <span class="stat-trend up">↑ enrolled</span>
+        </div>
+    </a>
+    <a href="{% url 'manage_instructors' %}" class="stat-card green" style="text-decoration: none; display: flex;">
+        <div class="stat-icon green">👩‍🏫</div>
+        <div class="stat-info">
+            <h4>{{ total_instructors }}</h4>
+            <p>Total Instructors</p>
+            <span class="stat-trend up">active</span>
+        </div>
+    </a>
+    <a href="{% url 'manage_quizzes' %}" class="stat-card rose" style="text-decoration: none; display: flex;">
+        <div class="stat-icon rose">📝</div>
+        <div class="stat-info">
+            <h4>{{ total_quizzes }}</h4>
+            <p>Total Quizzes</p>
+        </div>
+    </a>
+    <a href="{% url 'manage_lessons' %}" class="stat-card sky" style="text-decoration: none; display: flex;">
+        <div class="stat-icon sky">🎥</div>
+        <div class="stat-info">
+            <h4>{{ total_lessons }}</h4>
+            <p>Total Lessons</p>
+        </div>
+    </a>
+    <a href="{% url 'manage_subjects' %}" class="stat-card indigo" style="text-decoration: none; display: flex;">
+        <div class="stat-icon indigo">📖</div>
+        <div class="stat-info">
+            <h4>{{ total_subjects }}</h4>
+            <p>Subjects</p>
+        </div>
+    </a>
+    <div class="stat-card" style="display: flex;">
+        <div class="stat-icon" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">🎯</div>
+        <div class="stat-info">
+            <h4>{{ avg_score_display }}%</h4>
+            <p>Average Score</p>
+            <span class="stat-trend up">overall</span>
+        </div>
+    </div>
+    <div class="stat-card" style="display: flex;">
+        <div class="stat-icon" style="background: rgba(14, 165, 233, 0.12); color: #0ea5e9;">📑</div>
+        <div class="stat-info">
+            <h4>{{ total_quiz_attempts }}</h4>
+            <p>Quiz Attempts</p>
+            <span class="stat-trend up">recorded</span>
+        </div>
+    </div>
+</div>
+
+<!-- ============ CHARTS ============ -->
+<div class="chart-grid">
+    <div class="chart-card">
+        <h3>📈 Student Growth</h3>
+        <canvas id="growthChart"></canvas>
+    </div>
+    <div class="chart-card">
+        <h3>📊 Courses by Subject</h3>
+        <canvas id="distChart"></canvas>
+    </div>
+</div>
+
+<div class="chart-grid">
+    <div class="chart-card">
+        <h3>📉 Lessons per Course (Top 6)</h3>
+        <canvas id="enrollChart" style="max-height:220px;"></canvas>
+    </div>
+    <div class="chart-card">
+        <h3>📊 Performance by Class</h3>
+        <canvas id="perfChart" style="max-height:220px;"></canvas>
+    </div>
+</div>
+
+<!-- ============ POPULAR LESSONS + QUICK ACTIONS ============ -->
+<div class="content-grid">
+    <!-- Popular Lessons Table -->
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3>🔥 Most Popular Lessons</h3>
+            <a href="{% url 'manage_courses' %}">View All →</a>
+        </div>
+        {% if popular_lessons %}
+        <div style="overflow-x:auto;">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Lesson</th>
+                        <th>Course</th>
+                        <th>Instructor</th>
+                        <th>Views</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lesson in popular_lessons %}
+                    <tr>
+                        <td style="font-weight:600;">{{ lesson.title }}</td>
+                        <td>{{ lesson.course.title }}</td>
+                        <td>{{ lesson.course.instructor.get_full_name|default:lesson.course.instructor.username }}</td>
+                        <td><span class="views-badge">👁 {{ lesson.views }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">No lessons recorded yet.</div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3>⚡ Quick Actions</h3>
+        </div>
+        <div class="quick-actions">
+            <a href="{% url 'manage_students' %}" class="qa-btn">
+                <div class="qa-icon purple">👨‍🎓</div>
+                Manage Students
+            </a>
+            <a href="{% url 'create_user' %}" class="qa-btn">
+                <div class="qa-icon green">➕</div>
+                Add Instructor
+            </a>
+            <a href="{% url 'create_subject' %}" class="qa-btn">
+                <div class="qa-icon amber">📖</div>
+                Create Subject
+            </a>
+            <a href="{% url 'manage_courses' %}" class="qa-btn">
+                <div class="qa-icon sky">📚</div>
+                Manage Courses
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ============ ADVANCED ANALYTICS (Top Performers) ============ -->
+<div class="content-grid" style="grid-template-columns: 1fr;">
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3>🏆 Top Performers</h3>
+        </div>
+        {% if top_performers %}
+        <div style="overflow-x:auto;">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Class</th>
+                        <th>Average Score</th>
+                        <th>Best Score</th>
+                        <th>Total Attempts</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in top_performers %}
+                    <tr>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:0.6rem;">
+                                <div class="avatar-sm" style="background:{{ forloop.counter|divisibleby:3|yesno:'#6366f1,#10b981' }}{% if not forloop.counter|divisibleby:3 and not forloop.counter|divisibleby:2 %}#f59e0b{% endif %}{% if forloop.counter|divisibleby:2 and not forloop.counter|divisibleby:3 %}#0ea5e9{% endif %}">
+                                    {{ student.username|make_list|first|upper }}
+                                </div>
+                                <div style="font-weight:600;font-size:0.875rem;">{{ student.get_full_name|default:student.username }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge" style="background:var(--primary-light);font-size:0.75rem;">
+                                Class {{ student.student_profile.current_class|default:"N/A" }}
+                            </span>
+                        </td>
+                        <td style="font-weight:600; color:var(--primary);">{{ student.avg_score|floatformat:1 }}%</td>
+                        <td>{{ student.best_score|floatformat:1 }}%</td>
+                        <td><span class="views-badge">{{ student.total_attempts }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">No quiz data available yet to determine top performers.</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ============ ADVANCED ANALYTICS (Quiz Insights) ============ -->
+<div class="content-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <!-- Most Attempted Quizzes -->
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3 style="font-size: 1rem;">🔥 Most Attempted Quizzes</h3>
+        </div>
+        {% if most_attempted_quizzes %}
+        <table class="dash-table" style="font-size: 0.85rem;">
+            <thead>
+                <tr>
+                    <th>Quiz</th>
+                    <th>Attempts</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for quiz in most_attempted_quizzes %}
+                <tr>
+                    <td style="font-weight:600;">{{ quiz.title }}</td>
+                    <td><span class="views-badge" style="background: #e0e7ff; color: #4338ca;">{{ quiz.total_attempts }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state" style="font-size: 0.85rem;">No attempts yet.</div>
+        {% endif %}
+    </div>
+
+    <!-- Best Performing Quizzes -->
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3 style="font-size: 1rem;">⭐ Best Performing Quizzes</h3>
+        </div>
+        {% if best_performing_quizzes %}
+        <table class="dash-table" style="font-size: 0.85rem;">
+            <thead>
+                <tr>
+                    <th>Quiz</th>
+                    <th>Avg %</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for quiz in best_performing_quizzes %}
+                <tr>
+                    <td style="font-weight:600;">{{ quiz.title }}</td>
+                    <td style="color:var(--secondary); font-weight: 600;">{{ quiz.avg_score|floatformat:1 }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state" style="font-size: 0.85rem;">No attempts yet.</div>
+        {% endif %}
+    </div>
+
+    <!-- Hardest Quizzes -->
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3 style="font-size: 1rem;">⚠️ Hardest Quizzes</h3>
+        </div>
+        {% if hardest_quizzes %}
+        <table class="dash-table" style="font-size: 0.85rem;">
+            <thead>
+                <tr>
+                    <th>Quiz</th>
+                    <th>Avg %</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for quiz in hardest_quizzes %}
+                <tr>
+                    <td style="font-weight:600;">{{ quiz.title }}</td>
+                    <td style="color:var(--danger); font-weight: 600;">{{ quiz.avg_score|floatformat:1 }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state" style="font-size: 0.85rem;">No attempts yet.</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ============ RECENT STUDENTS + RECENT ACTIVITY ============ -->
+<div class="content-grid">
+    <!-- Recent Students -->
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3>🆕 Recent Students</h3>
+            <a href="{% url 'manage_students' %}">View All →</a>
+        </div>
+        {% if recent_students %}
+        <div style="overflow-x:auto;">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Class</th>
+                        <th>Joined</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in recent_students %}
+                    <tr>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:0.6rem;">
+                                <div class="avatar-sm" style="background:{{ forloop.counter|divisibleby:3|yesno:'#6366f1,#10b981' }}{% if not forloop.counter|divisibleby:3 and not forloop.counter|divisibleby:2 %}#f59e0b{% endif %}{% if forloop.counter|divisibleby:2 and not forloop.counter|divisibleby:3 %}#0ea5e9{% endif %}">
+                                    {{ student.username|make_list|first|upper }}
+                                </div>
+                                <div>
+                                    <div style="font-weight:600;font-size:0.875rem;">{{ student.get_full_name|default:student.username }}</div>
+                                    <div style="font-size:0.75rem;color:var(--text-light);">{{ student.email|default:"—" }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge" style="background:var(--primary-light);font-size:0.75rem;">
+                                Class {{ student.student_profile.current_class|default:"N/A" }}
+                            </span>
+                        </td>
+                        <td style="color:var(--text-light);font-size:0.82rem;">{{ student.date_joined|timesince }} ago</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">No students registered yet.</div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3>📋 Recent Activity</h3>
+        </div>
+        <div class="timeline">
+            {% for course in recent_courses %}
+            <div class="tl-item">
+                <div class="tl-dot {% cycle 'green' 'amber' 'rose' '' '' %}"></div>
+                <div>
+                    <div class="tl-text">
+                        <strong>{{ course.instructor.get_full_name|default:course.instructor.username }}</strong>
+                        created course "<strong>{{ course.title }}</strong>"
+                    </div>
+                    <div class="tl-time">{{ course.created_at|timesince }} ago</div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">No recent activity.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const COLORS = {
+        purple: '#6366f1', green: '#10b981', amber: '#f59e0b',
+        rose: '#f43f5e', sky: '#0ea5e9', indigo: '#818cf8'
+    };
+    const COLORS_ALPHA = {
+        purple: 'rgba(99,102,241,.12)', green: 'rgba(16,185,129,.12)',
+        amber: 'rgba(245,158,11,.12)'
+    };
+
+    /* ---- Student Growth (Line) ---- */
+    const growthLabels = {{ growth_labels|safe }};
+    const growthData   = {{ growth_data|safe }};
+
+    new Chart(document.getElementById('growthChart'), {
+        type: 'line',
+        data: {
+            labels: growthLabels.length ? growthLabels : ['No data'],
+            datasets: [{
+                label: 'New Students',
+                data: growthData.length ? growthData : [0],
+                borderColor: COLORS.purple,
+                backgroundColor: COLORS_ALPHA.purple,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: COLORS.purple,
+                borderWidth: 2.5
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    /* ---- Course Distribution (Doughnut) ---- */
+    const distLabels = {{ dist_labels|safe }};
+    const distData   = {{ dist_data|safe }};
+    const pieColors  = [COLORS.purple, COLORS.green, COLORS.amber, COLORS.rose, COLORS.sky, COLORS.indigo];
+
+    new Chart(document.getElementById('distChart'), {
+        type: 'doughnut',
+        data: {
+            labels: distLabels.length ? distLabels : ['No subjects'],
+            datasets: [{
+                data: distData.length ? distData : [1],
+                backgroundColor: pieColors,
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '62%',
+            plugins: { legend: { position: 'bottom', labels: { padding: 16, font: { size: 12 } } } }
+        }
+    });
+
+    /* ---- Lessons per Course (Bar) ---- */
+    const enrollLabels = {{ enroll_labels|safe }};
+    const enrollData   = {{ enroll_data|safe }};
+
+    new Chart(document.getElementById('enrollChart'), {
+        type: 'bar',
+        data: {
+            labels: enrollLabels.length ? enrollLabels : ['No courses'],
+            datasets: [{
+                label: 'Lessons',
+                data: enrollData.length ? enrollData : [0],
+                backgroundColor: COLORS_ALPHA.purple,
+                borderColor: COLORS.purple,
+                borderWidth: 1.5,
+                borderRadius: 6,
+                barThickness: 40
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    /* ---- Performance by Class (Bar) ---- */
+    const perfLabels = {{ perf_labels|safe }};
+    const perfData   = {{ perf_data|safe }};
+
+    new Chart(document.getElementById('perfChart'), {
+        type: 'bar',
+        data: {
+            labels: perfLabels.length ? perfLabels : ['No data'],
+            datasets: [{
+                label: 'Avg Score (%)',
+                data: perfData.length ? perfData : [0],
+                backgroundColor: COLORS_ALPHA.green,
+                borderColor: COLORS.green,
+                borderWidth: 1.5,
+                borderRadius: 6,
+                barThickness: 40
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, max: 100, ticks: { stepSize: 20 }, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

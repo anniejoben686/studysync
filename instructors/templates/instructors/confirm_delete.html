@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block header_title %}Confirm Deletion{% endblock %}
+{% block header_subtitle %}Please confirm you want to permanently delete this item.{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto; text-align: center; padding: 3rem 2rem;">
+    <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+    
+    <h3 style="margin-bottom: 1.5rem; color: var(--text);">Delete {{ type }}</h3>
+    
+    <p style="font-size: 1.1rem; color: var(--text-light); margin-bottom: 2rem;">
+        Are you sure you want to delete the {{ type|lower }} <strong>"{{ title }}"</strong>?
+        <br><br>
+        <span style="color: var(--danger); font-size: 0.9rem;">This action cannot be undone. All associated data will be lost.</span>
+    </p>
+    
+    <form method="post" style="display: flex; gap: 1rem; justify-content: center;">
+        {% csrf_token %}
+        <a href="{{ cancel_url }}" class="btn btn-outline" style="padding: 0.75rem 2rem;">Cancel</a>
+        <button type="submit" class="btn" style="background: var(--danger); color: white; border: none; padding: 0.75rem 2rem;">Yes, Delete It</button>
+    </form>
+</div>
+{% endblock %}

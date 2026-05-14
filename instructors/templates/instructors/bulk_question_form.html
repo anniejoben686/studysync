@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block header_title %}Add Questions to "{{ quiz.title }}"{% endblock %}
+{% block header_subtitle %}Please provide {{ quiz.number_of_questions }} questions for this quiz.{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto; padding-bottom: 6rem;">
+    <!-- Progress Indicator -->
+    <div style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
+        <h3 style="margin: 0; color: var(--text);">Bulk Question Entry</h3>
+        <span class="badge" style="background: var(--primary-light); font-size: 0.9rem;">
+            Total: {{ quiz.number_of_questions }} Question{{ quiz.number_of_questions|pluralize }}
+        </span>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+        {{ formset.management_form }}
+        
+        <!-- Display non-form errors -->
+        {% if formset.non_form_errors %}
+        <div class="card" style="margin-bottom: 2rem; border-left: 4px solid var(--danger); background: #fee2e2;">
+            <p style="color: #991b1b; margin: 0;">{{ formset.non_form_errors }}</p>
+        </div>
+        {% endif %}
+
+        {% for form in formset %}
+        <div class="card" style="margin-bottom: 2.5rem; border-top: 4px solid var(--primary);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);">
+                <h3 style="margin: 0; color: var(--text);">Question {{ forloop.counter }}</h3>
+                <span style="color: var(--text-light); font-weight: 500; font-size: 0.875rem;">Required</span>
+            </div>
+            
+            {% if form.non_field_errors %}
+                <div style="color: #991b1b; background: #fee2e2; padding: 0.75rem; border-radius: 0.25rem; margin-bottom: 1rem; font-size: 0.875rem;">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text);">
+                    {{ form.text.label }} <span style="color: var(--danger);">*</span>
+                </label>
+                {{ form.text }}
+                {% if form.text.errors %}
+                    <p style="color: var(--danger); font-size: 0.875rem; margin-top: 0.25rem;">{{ form.text.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text);">
+                    {{ form.marks.label }} <span style="color: var(--danger);">*</span>
+                </label>
+                {{ form.marks }}
+                {% if form.marks.errors %}
+                    <p style="color: var(--danger); font-size: 0.875rem; margin-top: 0.25rem;">{{ form.marks.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <!-- Option A -->
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text);">
+                        {{ form.option_a.label }} <span style="color: var(--danger);">*</span>
+                    </label>
+                    {{ form.option_a }}
+                    {% if form.option_a.errors %}
+                        <p style="color: var(--danger); font-size: 0.875rem; margin-top: 0.25rem;">{{ form.option_a.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Option B -->
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text);">
+                        {{ form.option_b.label }} <span style="color: var(--danger);">*</span>
+                    </label>
+                    {{ form.option_b }}
+                    {% if form.option_b.errors %}
+                        <p style="color: var(--danger); font-size: 0.875rem; margin-top: 0.25rem;">{{ form.option_b.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Option C -->
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text);">
+                        {{ form.option_c.label }} <span style="color: var(--danger);">*</span>
+                    </label>
+                    {{ form.option_c }}
+                    {% if form.option_c.errors %}
+                        <p style="color: var(--danger); font-size: 0.875rem; margin-top: 0.25rem;">{{ form.option_c.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Option D -->
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text);">
+                        {{ form.option_d.label }} <span style="color: var(--danger);">*</span>
+                    </label>
+                    {{ form.option_d }}
+                    {% if form.option_d.errors %}
+                        <p style="color: var(--danger); font-size: 0.875rem; margin-top: 0.25rem;">{{ form.option_d.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem; padding: 1.25rem; background: var(--background); border-radius: 0.5rem; border: 1px solid var(--border);">
+                <label style="display: block; margin-bottom: 0.75rem; font-weight: 600; color: var(--text);">
+                    {{ form.correct_option.label }} <span style="color: var(--danger);">*</span>
+                </label>
+                {{ form.correct_option }}
+                {% if form.correct_option.errors %}
+                    <p style="color: var(--danger); font-size: 0.875rem; margin-top: 0.25rem;">{{ form.correct_option.errors.0 }}</p>
+                {% endif %}
+                <small style="color: var(--text-light); display: block; margin-top: 0.5rem;">Please accurately mark which option contains the correct answer.</small>
+            </div>
+
+            <div style="margin-bottom: 0;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text);">
+                    {{ form.explanation.label }}
+                </label>
+                {{ form.explanation }}
+                {% if form.explanation.errors %}
+                    <p style="color: var(--danger); font-size: 0.875rem; margin-top: 0.25rem;">{{ form.explanation.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        
+        <div style="position: fixed; bottom: 0; left: 0; right: 0; padding: 1rem 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px); box-shadow: 0 -4px 15px rgba(0,0,0,0.05); display: flex; justify-content: center; z-index: 100; border-top: 1px solid var(--border);">
+            <div style="max-width: 900px; width: 100%; padding: 0 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span style="color: var(--text); font-weight: 600;">You are filling {{ quiz.number_of_questions }} questions</span>
+                    <p style="color: var(--text-light); margin: 0; font-size: 0.875rem;">If validation fails, your progress will be preserved.</p>
+                </div>
+                <button type="submit" class="btn btn-primary" style="padding: 0.85rem 2.5rem; font-size: 1.05rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    💾 Save All Questions
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

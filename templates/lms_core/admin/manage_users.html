@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block header_title %}{{ title }}{% endblock %}
+{% block header_subtitle %}View and manage all {{ user_type }}{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="margin: 0;">All {{ user_type|title }} ({{ users|length }})</h2>
+        {% if user_type == 'instructors' %}
+        <a href="{% url 'create_user' %}" class="btn btn-primary">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 0.5rem;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            Create New Instructor
+        </a>
+        {% endif %}
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border);">
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Username</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Name</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Email</th>
+                    {% if user_type == 'students' %}
+                        <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Class</th>
+                        <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Quiz Attempts</th>
+                    {% elif user_type == 'instructors' %}
+                        <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Courses</th>
+                    {% endif %}
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Status</th>
+                    <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text);">Joined</th>
+                    <th style="padding: 1rem; text-align: center; font-weight: 600; color: var(--text);">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 1rem; color: var(--text);">{{ user.username }}</td>
+                    <td style="padding: 1rem; color: var(--text);">{{ user.get_full_name|default:user.username }}</td>
+                    <td style="padding: 1rem; color: var(--text);">{{ user.email|default:'-' }}</td>
+                    {% if user_type == 'students' %}
+                        <td style="padding: 1rem;">
+                            <span class="badge" style="background: var(--primary-light);">Class {{ user.student_profile.current_class|default:'N/A' }}</span>
+                        </td>
+                        <td style="padding: 1rem; color: var(--text);">{{ user.quiz_attempts.count|default:0 }}</td>
+                    {% elif user_type == 'instructors' %}
+                        <td style="padding: 1rem; color: var(--text);">{{ user.taught_courses.count|default:0 }}</td>
+                    {% endif %}
+                    <td style="padding: 1rem;">
+                        <span class="badge" style="background: {% if user.is_active %}#10b981{% else %}#ef4444{% endif %};">{{ user.is_active|yesno:"Active,Inactive" }}</span>
+                    </td>
+                    <td style="padding: 1rem; color: var(--text-light);">{{ user.date_joined|date:"M d, Y" }}</td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                            <a href="{% url 'edit_user' user.pk %}" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Edit</a>
+                            {% if user != request.user %}
+                                <form method="post" action="{% url 'delete_user' user.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn" style="padding: 0.5rem 1rem; font-size: 0.875rem; background: var(--danger); color: white;">Delete</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="{% if user_type == 'students' %}8{% else %}7{% endif %}" style="padding: 2rem; text-align: center; color: var(--text-light);">No {{ user_type }} found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<a href="{% url 'admin_dashboard' %}" class="btn btn-outline" style="margin-top: 1rem;">
+    ← Back to Dashboard
+</a>
+{% endblock %}

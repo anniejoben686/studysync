@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block header_title %}{{ title }}{% endblock %}
+{% block header_subtitle %}Manage subject information{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <h2 style="margin-bottom: 2rem; color: var(--text);">{{ title }}</h2>
+
+    <form method="post" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="name" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text);">Subject Name *</label>
+            <input type="text" id="name" name="name" value="{{ subject.name|default:'' }}" required
+                   style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s;"
+                   placeholder="Enter subject name">
+        </div>
+
+        <div class="form-group">
+            <label for="description" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text);">Description</label>
+            <textarea id="description" name="description" rows="4"
+                      style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.2s; resize: vertical;"
+                      placeholder="Enter subject description (optional)">{{ subject.description|default:'' }}</textarea>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                {% if subject %}Update Subject{% else %}Create Subject{% endif %}
+            </button>
+            <a href="{% url 'manage_subjects' %}" class="btn btn-outline" style="flex: 1; text-align: center;">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.form-group input:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+</style>
+{% endblock %}

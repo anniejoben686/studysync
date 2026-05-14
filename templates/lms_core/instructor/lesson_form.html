@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block header_title %}Add Lesson to {{ course.title }}{% endblock %}
+{% block header_subtitle %}Upload a video link or PDF document.{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        {% for field in form %}
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text);">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <span style="font-size: 0.875rem; color: var(--text-light); margin-top: 0.25rem; display: block;">{{ field.help_text }}</span>
+                {% endif %}
+                {% for error in field.errors %}
+                    <span style="color: var(--danger); font-size: 0.875rem; margin-top: 0.25rem; display: block;">{{ error }}</span>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">Save Lesson</button>
+            <a href="{% url 'course_detail_instructor' course.id %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
